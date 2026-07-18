@@ -8,7 +8,7 @@ its text on Sefaria.
 
 ## Build
 
-Create a Python environment and install the sole runtime dependency:
+Create a Python environment and install the runtime dependencies:
 
 ```bash
 python -m venv .venv
@@ -80,6 +80,9 @@ provenance, and philological-review work still needed before publishable claims.
   Shape API in `tanakh_shape.json` (recorded 2026-07-17: 39 Sefaria book
   indexes, 929 chapters, 23,206 verses).
 - A range link has total citation weight 1, divided over its canonical verses.
+- If duplicate Sefaria records assign different ranges to the same exact
+  source–verse pair, the shortest (most specific) anchor determines its weight;
+  input file and record order cannot change the result.
 - Expanded anchors are clipped to the chapter represented by each cache file;
   this prevents long ranges from being counted once per cached chapter.
 - The exact Sefaria source ref is the co-citation discourse unit. This avoids

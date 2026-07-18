@@ -20,7 +20,8 @@ def load_bundle():
 
     A link to a range has total weight one, spread evenly over the canonical
     verses in that range. The same source/verse/category triple is counted only
-    once even if Sefaria returned it in more than one cached response.
+    once even if Sefaria returned it more than once. When duplicate records
+    disagree about range size, the shortest (most specific) anchor wins.
     """
     counts = collections.defaultdict(collections.Counter)
     works = collections.defaultdict(lambda: collections.defaultdict(collections.Counter))
@@ -28,7 +29,7 @@ def load_bundle():
     graph_sources = collections.defaultdict(
         lambda: collections.defaultdict(lambda: collections.defaultdict(set))
     )
-    seen = set()
+    best_links = {}
     for record in iter_records():
         category = record["category"]
         source = record["sourceRef"]
@@ -38,14 +39,26 @@ def load_bundle():
         sources[category].add(source)
         if work and record["anchor_span"] <= 10:
             graph_sources[category][work][source].update(record["verses"])
-        weight = 1.0 / record["anchor_span"]
         for verse in record["verses"]:
             key = category, source, verse
-            if key not in seen:
-                counts[category][verse] += weight
-                if work:
-                    works[category][work][verse] += weight
-                seen.add(key)
+            # Compare content, never encounter order. Prefer a real work name
+            # for the unlikely case of equal-span records with inconsistent
+            # metadata, then use its spelling as a deterministic tie-breaker.
+            candidate = (
+                record["anchor_span"],
+                0 if work else 1,
+                work or "",
+            )
+            if key not in best_links or candidate < best_links[key]:
+                best_links[key] = candidate
+
+    for key in sorted(best_links):
+        category, _source, verse = key
+        anchor_span, _missing_work, work = best_links[key]
+        weight = 1.0 / anchor_span
+        counts[category][verse] += weight
+        if work:
+            works[category][work][verse] += weight
     return counts, works, sources, graph_sources
 
 

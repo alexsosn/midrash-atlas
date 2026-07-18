@@ -16,10 +16,22 @@ class AtlasDataTests(unittest.TestCase):
 
     def test_reports_complete_tanakh_corpus(self):
         summary = self.data["summary"]
+        self.assertEqual(
+            self.data["meta"]["method_version"],
+            "6.2-most-specific-link-dedup",
+        )
         self.assertEqual(summary["tanakh_books"], 39)
         self.assertEqual(summary["tanakh_chapters"], 929)
         self.assertEqual(summary["tanakh_verses"], 23206)
         self.assertEqual(self.data["meta"]["cache"]["files"], 929)
+
+    def test_report_footer_uses_dataset_method_version(self):
+        template_path = os.path.join(HERE, "atlas_template.html")
+        with open(template_path, encoding="utf-8") as handle:
+            template = handle.read()
+        self.assertIn('id="method-version"', template)
+        self.assertIn("DATA.meta.method_version", template)
+        self.assertNotIn("метод 3.0", template)
 
     def test_profiles_reach_all_three_tanakh_sections(self):
         sections = set()

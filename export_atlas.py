@@ -395,10 +395,11 @@ def build_data():
             "cache": cache,
             "source": "https://www.sefaria.org/api/links/{tref}?with_text=0",
             "shape_source": "https://www.sefaria.org/api/shape/{title}",
-            "method_version": "6.1-support-one-slices",
+            "method_version": "6.2-most-specific-link-dedup",
             "notes": [
                 "Canonical Tanakh refs are validated against the full Sefaria Tanakh Shape API response.",
                 "A range link has total citation weight 1, divided over its canonical verses.",
+                "Duplicate source/verse/category triples use the shortest, most specific anchor span regardless of record order.",
                 "Co-citation excludes single anchors spanning more than 10 verses.",
                 "The exact Sefaria source ref is the co-citation discourse unit.",
                 "Default graphs merge targets separated by at most one uncited verse into source-specific loci.",

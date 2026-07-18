@@ -593,7 +593,7 @@
     </section>
   </main>
 
-  <footer><span id="generated">Згенеровано —</span><span>Джерело текстуальних зв’язків: Sefaria · метод 3.0</span></footer>
+  <footer><span id="generated">Згенеровано —</span><span id="method-version">Джерело текстуальних зв’язків: Sefaria · метод —</span></footer>
 
   <script>
     "use strict";
@@ -635,6 +635,7 @@
       $("#corpus-size").textContent = fmt.format(DATA.summary.tanakh_chapters) + " розділів Танаху · " + fmt.format(DATA.summary.tanakh_books) + " книжкових індексів Sefaria";
       const date = new Date(DATA.meta.generated_at);
       $("#generated").textContent = "Згенеровано " + date.toLocaleString("uk-UA", { dateStyle: "long", timeStyle: "short" });
+      $("#method-version").textContent = "Джерело текстуальних зв’язків: Sefaria · метод " + DATA.meta.method_version;
     }
 
     const profileMaps = Object.fromEntries(DATA.traditions.map(name => [name, new Map(DATA.profiles[name])]));
