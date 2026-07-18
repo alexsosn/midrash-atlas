@@ -600,6 +600,7 @@
     const DATA = /*__ATLAS_DATA__*/;
     const $ = (selector) => document.querySelector(selector);
     const fmt = new Intl.NumberFormat("uk-UA", { maximumFractionDigits: 1 });
+    const precise = new Intl.NumberFormat("uk-UA", { maximumSignificantDigits: 4 });
     const compact = new Intl.NumberFormat("uk-UA", { notation: "compact", maximumFractionDigits: 1 });
     const communityVars = ["--series-1", "--series-2", "--series-3", "--series-4", "--series-5", "--series-6", "--series-7", "--series-8"];
 
@@ -913,6 +914,27 @@
       nodeIds.forEach(id => { const p = positions.get(id); p.x = maxX === minX ? .5 : (p.x - minX) / (maxX - minX); p.y = maxY === minY ? .5 : (p.y - minY) / (maxY - minY); });
       return positions;
     }
+    function fallbackLargeLayout(nodeIds) {
+      const positions = new Map(), count = Math.max(1, nodeIds.length);
+      nodeIds.forEach((id, index) => {
+        const angle = index * 2.3999632297;
+        const radius = .48 * Math.sqrt((index + 1) / count);
+        positions.set(id, { x: .5 + Math.cos(angle) * radius, y: .5 + Math.sin(angle) * radius });
+      });
+      return positions;
+    }
+    function completeWorkLayout(category, workName, nodeIds, edges) {
+      if (nodeIds.length <= 120) return forceLayout(nodeIds, edges);
+      const stored = DATA.work_layouts?.[category]?.[workName];
+      if (!stored) return fallbackLargeLayout(nodeIds);
+      const positions = new Map(stored.map(([id, x, y]) => [id, { x, y }]));
+      const missing = nodeIds.filter(id => !positions.has(id));
+      missing.forEach((id, index) => {
+        const angle = index * 2.3999632297;
+        positions.set(id, { x: .5 + Math.cos(angle) * .49, y: .5 + Math.sin(angle) * .49 });
+      });
+      return positions;
+    }
     function bookForVerseId(id) { return DATA.book_ranges.find(([_book, start, end]) => id >= start && id <= end)?.[0]; }
     function chapterForVerseId(id) { return Number(DATA.verse_index[id].slice(DATA.verse_index[id].lastIndexOf(" ") + 1).split(":")[0]); }
     function distanceBandIds(a, b) {
@@ -944,12 +966,44 @@
       }
       return chosen;
     }
+    function pairMass(items) {
+      let sum = 0, squares = 0;
+      items.forEach(item => { const value = item.strength; sum += value; squares += value * value; });
+      return Math.max(0, (sum * sum - squares) / 2);
+    }
+    function workBandDenominators(nodeIds, strengths) {
+      const bands = new Map(["adjacent", "2-3", "4-10", "same-chapter", "same-book-near", "same-book-far", "cross-book"].map(name => [name, 0]));
+      const items = nodeIds.map(id => ({ id, strength: strengths.get(id), book: bookForVerseId(id), chapter: chapterForVerseId(id) }));
+      const byBook = new Map();
+      items.forEach(item => { if (!byBook.has(item.book)) byBook.set(item.book, []); byBook.get(item.book).push(item); });
+      const totalMass = pairMass(items); let sameBookMass = 0;
+      byBook.forEach(bookItems => {
+        bookItems.sort((a, b) => a.id - b.id);
+        sameBookMass += pairMass(bookItems);
+        const byChapter = new Map();
+        bookItems.forEach(item => { if (!byChapter.has(item.chapter)) byChapter.set(item.chapter, []); byChapter.get(item.chapter).push(item); });
+        let sameChapterMass = 0, shortSameChapterMass = 0;
+        byChapter.forEach(chapterItems => { sameChapterMass += pairMass(chapterItems); });
+        for (let i = 0; i < bookItems.length; i++) {
+          for (let j = i + 1; j < bookItems.length && bookItems[j].id - bookItems[i].id <= 50; j++) {
+            const left = bookItems[i], right = bookItems[j], distance = right.id - left.id;
+            const mass = left.strength * right.strength;
+            if (distance === 1) bands.set("adjacent", bands.get("adjacent") + mass);
+            else if (distance <= 3) bands.set("2-3", bands.get("2-3") + mass);
+            else if (distance <= 10) bands.set("4-10", bands.get("4-10") + mass);
+            else if (left.chapter !== right.chapter) bands.set("same-book-near", bands.get("same-book-near") + mass);
+            if (distance <= 10 && left.chapter === right.chapter) shortSameChapterMass += mass;
+          }
+        }
+        bands.set("same-chapter", bands.get("same-chapter") + sameChapterMass - shortSameChapterMass);
+      });
+      bands.set("cross-book", Math.max(0, totalMass - sameBookMass));
+      const assignedSameBook = bands.get("adjacent") + bands.get("2-3") + bands.get("4-10") + bands.get("same-chapter") + bands.get("same-book-near");
+      bands.set("same-book-far", Math.max(0, sameBookMass - assignedSameBook));
+      return bands;
+    }
     function addWorkSurprise(edges, nodeIds, strengths) {
-      const denominators = new Map(), observed = new Map();
-      for (let i = 0; i < nodeIds.length; i++) for (let j = i + 1; j < nodeIds.length; j++) {
-        const a = nodeIds[i], b = nodeIds[j], band = distanceBandIds(a, b);
-        denominators.set(band, (denominators.get(band) || 0) + strengths.get(a) * strengths.get(b));
-      }
+      const denominators = workBandDenominators(nodeIds, strengths), observed = new Map();
       edges.forEach(edge => { const band = distanceBandIds(edge.a, edge.b); observed.set(band, (observed.get(band) || 0) + edge.weight); });
       edges.forEach(edge => {
         const band = distanceBandIds(edge.a, edge.b), denominator = denominators.get(band) || 0;
@@ -987,30 +1041,25 @@
       const fullEdges = built.edges, fullNodeIds = [...new Set(fullEdges.flatMap(edge => [edge.a, edge.b]))];
       const weightedDegree = new Map(fullNodeIds.map(id => [id, 0]));
       fullEdges.forEach(edge => { weightedDegree.set(edge.a, weightedDegree.get(edge.a) + edge.weight); weightedDegree.set(edge.b, weightedDegree.get(edge.b) + edge.weight); });
-      const keep = new Set([...fullNodeIds].sort((a, b) => weightedDegree.get(b) - weightedDegree.get(a)).slice(0, 120));
-      const induced = fullEdges.filter(edge => keep.has(edge.a) && keep.has(edge.b)), inducedIds = [...keep];
-      addWorkSurprise(induced, inducedIds, weightedDegree);
-      const recommendedSupport = adaptiveWorkThreshold(induced, fullNodeIds.length);
+      addWorkSurprise(fullEdges, fullNodeIds, weightedDegree);
+      const recommendedSupport = adaptiveWorkThreshold(fullEdges, fullNodeIds.length);
       let minSurprise = .5;
-      let visibleEdges = induced.filter(edge => requestedMode !== "unexpected" || edge.surprise >= minSurprise);
-      if (requestedMode === "unexpected" && !visibleEdges.length && induced.length) {
-        minSurprise = Math.max(0, Math.min(...induced.map(edge => edge.surprise)));
-        visibleEdges = induced.filter(edge => edge.surprise >= minSurprise);
+      if (requestedMode === "unexpected" && fullEdges.length && !fullEdges.some(edge => edge.surprise >= minSurprise)) {
+        minSurprise = Math.max(0, Math.min(...fullEdges.map(edge => edge.surprise)));
       }
-      const visibleIds = [...new Set(visibleEdges.flatMap(edge => [edge.a, edge.b]))];
-      const components = connectedComponents(visibleIds, visibleEdges), componentFor = new Map();
+      const components = connectedComponents(fullNodeIds, fullEdges), componentFor = new Map();
       components.forEach((component, index) => component.forEach(id => componentFor.set(id, index)));
-      const positions = forceLayout(visibleIds, visibleEdges);
-      const order = [...visibleIds].sort((a, b) => weightedDegree.get(b) - weightedDegree.get(a)), indexFor = new Map(order.map((id, index) => [id, index]));
+      const positions = completeWorkLayout(category, workData.name, fullNodeIds, fullEdges);
+      const order = [...fullNodeIds].sort((a, b) => weightedDegree.get(b) - weightedDegree.get(a)), indexFor = new Map(order.map((id, index) => [id, index]));
       const adjacency = new Map(order.map(id => [id, []]));
-      visibleEdges.forEach(edge => { adjacency.get(edge.a).push([edge.b, edge]); adjacency.get(edge.b).push([edge.a, edge]); });
+      fullEdges.forEach(edge => { adjacency.get(edge.a).push([edge.b, edge]); adjacency.get(edge.b).push([edge.a, edge]); });
       function workNeighborRows(id) {
         const pairs = adjacency.get(id), seen = new Set(), selected = [];
         [...pairs].sort((a, b) => b[1].weight - a[1].weight).slice(0, 10).concat([...pairs].sort((a, b) => b[1].surprise - a[1].surprise).slice(0, 10)).forEach(pair => { if (!seen.has(pair[0])) { seen.add(pair[0]); selected.push(pair); } });
         return selected.map(([neighbor, edge]) => [indexFor.get(neighbor), edge.weight, edge.support, edge.sources, edge.surprise]);
       }
-      const nodes = order.map(id => ({ id: DATA.verse_index[id], x: positions.get(id).x, y: positions.get(id).y, d: weightedDegree.get(id), c: componentFor.get(id), nb: workNeighborRows(id) }));
-      const edges = visibleEdges.map(edge => [indexFor.get(edge.a), indexFor.get(edge.b), edge.weight, edge.support, edge.surprise]).sort((a, b) => b[2] - a[2]);
+      const nodes = order.map(id => ({ id: DATA.verse_index[id], x: positions.get(id).x, y: positions.get(id).y, d: weightedDegree.get(id), c: componentFor.get(id), near: adjacency.get(id).map(([neighbor]) => indexFor.get(neighbor)), nb: workNeighborRows(id) }));
+      const edges = fullEdges.map(edge => [indexFor.get(edge.a), indexFor.get(edge.b), edge.weight, edge.support, edge.surprise, edge.sources]).sort((a, b) => b[2] - a[2]);
       const comms = components.map((component, index) => ({ i: index, size: component.length, top: [...component].sort((a, b) => weightedDegree.get(b) - weightedDegree.get(a)).slice(0, 6).map(id => DATA.verse_index[id]) }));
       const nodeCount = fullNodeIds.length, edgeCount = fullEdges.length;
       return { title: workData.name, category, method: "components", view_mode: requestedMode, nodes, edges, comms, community_count: components.length, substantial_community_count: components.length, min_support: 1, recommended_support: recommendedSupport, min_surprise: minSurprise, Q: null, full: { nodes: nodeCount, edges: edgeCount, total_weight: fullEdges.reduce((sum, edge) => sum + edge.weight, 0), support_sum: fullEdges.reduce((sum, edge) => sum + edge.support, 0), supporting_sources: built.eligibleSources, loci: built.locusCount, avg_degree: nodeCount ? 2 * edgeCount / nodeCount : 0, density: nodeCount > 1 ? 2 * edgeCount / (nodeCount * (nodeCount - 1)) : 0 } };
@@ -1024,6 +1073,7 @@
     let graphCaptionBase = "";
     let selectedNode = null;
     let selectedCommunity = null;
+    let selectedSource = null;
     let transform = { scale: 1, x: 0, y: 0 };
     let pointer = null;
     function cssColor(variable) { return getComputedStyle(document.documentElement).getPropertyValue(variable).trim(); }
@@ -1068,45 +1118,62 @@
       ctx.clearRect(0, 0, rect.width, rect.height);
       const threshold = Number($("#weight-filter").value);
       const active = activeNodes(threshold);
+      if (selectedNode !== null) active.add(selectedNode);
       $("#graph-caption").textContent = graphCaptionBase + " · " + active.size + " вузлів / " + graph.edges.filter(edge => edgePass(edge, threshold)).length + " ребер";
       const line = cssColor("--line"), muted = cssColor("--muted"), ink = cssColor("--ink"), surface = cssColor("--surface"), accent = cssColor("--accent");
-      const neighborSet = selectedNode === null ? null : new Set([selectedNode, ...graph.nodes[selectedNode].nb.map(item => item[0])]);
+      const neighborSet = selectedNode === null ? null : new Set([selectedNode, ...(graph.nodes[selectedNode].near || graph.nodes[selectedNode].nb.map(item => item[0]))]);
+      const sourceNodeSet = selectedSource === null ? null : new Set(graph.edges.filter(edge => edge[5]?.includes(selectedSource)).flatMap(edge => [edge[0], edge[1]]));
+      if (sourceNodeSet) sourceNodeSet.forEach(index => active.add(index));
       ctx.lineCap = "round";
+      const edgeBuckets = new Map();
       graph.edges.forEach(edge => {
         const [a, b, weight, support, surprise] = edge;
-        if (!edgePass(edge, threshold)) return;
+        const inSource = selectedSource !== null && edge[5]?.includes(selectedSource);
+        if (!edgePass(edge, threshold) && !inSource) return;
         const visualStrength = graph.view_mode === "unexpected" ? Math.max(.25, surprise) : support;
         const incident = selectedNode !== null && (a === selectedNode || b === selectedNode);
         const inCommunity = selectedCommunity !== null && graph.nodes[a].c === selectedCommunity && graph.nodes[b].c === selectedCommunity;
         const p1 = screenPoint(graph.nodes[a]), p2 = screenPoint(graph.nodes[b]);
-        ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y);
-        if (selectedNode !== null) {
-          ctx.strokeStyle = incident ? accent : line; ctx.globalAlpha = incident ? .9 : .035; ctx.lineWidth = incident ? Math.min(3.2, 1.2 + visualStrength / 6) : .65;
+        let color, alpha, width;
+        if (selectedSource !== null) {
+          color = inSource ? accent : line; alpha = inSource ? .92 : .025; width = inSource ? Math.min(3.2, 1.2 + visualStrength / 6) : .5;
+        } else if (selectedNode !== null) {
+          color = incident ? accent : line; alpha = incident ? .9 : .035; width = incident ? Math.min(3.2, 1.2 + visualStrength / 6) : .65;
         } else if (selectedCommunity !== null) {
-          ctx.strokeStyle = inCommunity ? cssColor(communityVars[selectedCommunity % communityVars.length]) : line; ctx.globalAlpha = inCommunity ? .78 : .035; ctx.lineWidth = inCommunity ? Math.min(2.8, 1 + visualStrength / 8) : .65;
+          color = inCommunity ? cssColor(communityVars[selectedCommunity % communityVars.length]) : line; alpha = inCommunity ? .78 : .035; width = inCommunity ? Math.min(2.8, 1 + visualStrength / 8) : .65;
         } else {
-          ctx.strokeStyle = line; ctx.globalAlpha = support === 1 && graph.view_mode !== "unexpected" ? .075 : Math.min(.82, .18 + visualStrength / 16); ctx.lineWidth = support === 1 && graph.view_mode !== "unexpected" ? .5 : Math.min(2.8, .68 + visualStrength / 8);
+          color = line; alpha = support === 1 && graph.view_mode !== "unexpected" ? .075 : Math.min(.82, .18 + visualStrength / 16); width = support === 1 && graph.view_mode !== "unexpected" ? .5 : Math.min(2.8, .68 + visualStrength / 8);
         }
-        ctx.stroke();
+        alpha = Math.round(alpha * 40) / 40; width = Math.round(width * 4) / 4;
+        const key = color + "|" + alpha + "|" + width;
+        if (!edgeBuckets.has(key)) edgeBuckets.set(key, { path: new Path2D(), color, alpha, width });
+        const bucket = edgeBuckets.get(key); bucket.path.moveTo(p1.x, p1.y); bucket.path.lineTo(p2.x, p2.y);
       });
+      edgeBuckets.forEach(bucket => { ctx.strokeStyle = bucket.color; ctx.globalAlpha = bucket.alpha; ctx.lineWidth = bucket.width; ctx.stroke(bucket.path); });
       ctx.globalAlpha = 1;
+      const nodeBuckets = new Map();
       graph.nodes.forEach((node, index) => {
         if (!active.has(index)) return;
         const p = screenPoint(node); const radius = nodeRadius(node) * Math.sqrt(transform.scale);
-        ctx.beginPath(); ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = selectedCommunity === node.c ? cssColor(communityVars[node.c % communityVars.length]) : (node.c < communityVars.length ? cssColor(communityVars[node.c]) : muted);
-        if (selectedNode !== null) ctx.globalAlpha = neighborSet.has(index) ? 1 : .18;
-        else if (selectedCommunity !== null) ctx.globalAlpha = node.c === selectedCommunity ? 1 : .12;
-        else ctx.globalAlpha = node.c < communityVars.length ? .92 : .42;
-        ctx.fill(); ctx.globalAlpha = 1;
-        if (index === selectedNode) { ctx.strokeStyle = surface; ctx.lineWidth = 5; ctx.stroke(); ctx.strokeStyle = ink; ctx.lineWidth = 1.5; ctx.stroke(); }
+        const color = selectedCommunity === node.c ? cssColor(communityVars[node.c % communityVars.length]) : (node.c < communityVars.length ? cssColor(communityVars[node.c]) : muted);
+        const alpha = selectedSource !== null ? (sourceNodeSet.has(index) ? 1 : .1) : selectedNode !== null ? (neighborSet.has(index) ? 1 : .18) : selectedCommunity !== null ? (node.c === selectedCommunity ? 1 : .12) : (node.c < communityVars.length ? .92 : .42);
+        const key = color + "|" + alpha;
+        if (!nodeBuckets.has(key)) nodeBuckets.set(key, { path: new Path2D(), color, alpha });
+        nodeBuckets.get(key).path.moveTo(p.x + radius, p.y); nodeBuckets.get(key).path.arc(p.x, p.y, radius, 0, Math.PI * 2);
       });
+      nodeBuckets.forEach(bucket => { ctx.fillStyle = bucket.color; ctx.globalAlpha = bucket.alpha; ctx.fill(bucket.path); });
+      ctx.globalAlpha = 1;
+      if (selectedNode !== null) {
+        const selected = graph.nodes[selectedNode], p = screenPoint(selected), radius = nodeRadius(selected) * Math.sqrt(transform.scale);
+        ctx.beginPath(); ctx.arc(p.x, p.y, radius, 0, Math.PI * 2); ctx.strokeStyle = surface; ctx.lineWidth = 5; ctx.stroke(); ctx.strokeStyle = ink; ctx.lineWidth = 1.5; ctx.stroke();
+      }
       if ($("#show-labels").checked) {
         ctx.font = "11px " + getComputedStyle(document.body).fontFamily;
         ctx.textBaseline = "middle";
+        const selectedCommunitySize = selectedCommunity === null ? 0 : graph.nodes.reduce((sum, item) => sum + (item.c === selectedCommunity), 0);
         graph.nodes.forEach((node, index) => {
           if (!active.has(index)) return;
-          const selectedClusterLabel = selectedCommunity !== null && node.c === selectedCommunity && graph.nodes.filter(item => item.c === selectedCommunity).length <= 32;
+          const selectedClusterLabel = selectedCommunity !== null && node.c === selectedCommunity && selectedCommunitySize <= 32;
           if (index > 15 && index !== selectedNode && !selectedClusterLabel) return;
           const p = screenPoint(node); const radius = nodeRadius(node) * Math.sqrt(transform.scale);
           ctx.fillStyle = ink; ctx.globalAlpha = selectedCommunity !== null && node.c !== selectedCommunity ? .12 : (index === selectedNode ? 1 : .82);
@@ -1130,6 +1197,7 @@
       selectedNode = index;
       if (index !== null) {
         selectedCommunity = null;
+        selectedSource = null;
         $("#community-select").value = "";
         document.querySelectorAll(".community").forEach(button => button.setAttribute("aria-pressed", "false"));
       }
@@ -1151,17 +1219,37 @@
         const li = document.createElement("li");
         const line = document.createElement("div"); line.className = "neighbor-line"; line.append(refLink(graph.nodes[neighborIndex].id));
         const w = document.createElement("span"); w.className = "neighbor-weight";
-        w.textContent = fmt.format(support) + " джерел" + (graph.view_mode === "raw" ? "" : " · вага " + fmt.format(weight)) + (graph.view_mode === "unexpected" ? " · " + (surprise >= 0 ? "+" : "") + fmt.format(surprise) + " біт" : "");
+        w.textContent = fmt.format(support) + " джерел" + (graph.view_mode === "raw" ? "" : " · вага " + precise.format(weight)) + (graph.view_mode === "unexpected" ? " · " + (surprise >= 0 ? "+" : "") + precise.format(surprise) + " біт" : "");
         line.append(w); li.append(line);
         if (sources.length) {
           const details = document.createElement("details"); details.className = "source-details";
           const summary = document.createElement("summary"); summary.textContent = "Показати всі джерельні посилання (" + sources.length + ")"; details.append(summary);
-          sources.forEach(source => details.append(refLink(sourceReference(source))));
+          sources.forEach(source => {
+            const row = document.createElement("div"); row.append(refLink(sourceReference(source)));
+            if (graph.method === "components" && graph.edges.some(edge => edge[5]?.includes(source))) {
+              const isolate = document.createElement("button"); isolate.type = "button"; isolate.textContent = "Показати підграф джерела"; isolate.addEventListener("click", () => renderSource(source)); row.append(isolate);
+            }
+            details.append(row);
+          });
           li.append(details);
         }
         list.append(li);
       });
       detail.append(title, meta, sub, list); drawGraph();
+    }
+    function renderSource(source) {
+      selectedNode = null; selectedCommunity = null; selectedSource = source;
+      $("#community-select").value = "";
+      document.querySelectorAll(".community").forEach(button => button.setAttribute("aria-pressed", "false"));
+      const sourceEdges = graph.edges.filter(edge => edge[5]?.includes(source));
+      const nodeIndexes = [...new Set(sourceEdges.flatMap(edge => [edge[0], edge[1]]))];
+      const detail = $("#graph-detail"); detail.replaceChildren();
+      const title = document.createElement("h3"); title.className = "detail-ref"; title.append(refLink(sourceReference(source)));
+      const copy = document.createElement("p"); copy.className = "compare-copy"; copy.textContent = fmt.format(nodeIndexes.length) + " віршів · " + fmt.format(sourceEdges.length) + " міжлокусних пар у повному графі твору.";
+      const sub = document.createElement("h3"); sub.textContent = "Усі вірші цього джерельного сегмента";
+      const list = document.createElement("ul"); list.className = "neighbor-list";
+      nodeIndexes.sort((a, b) => graph.nodes[a].id.localeCompare(graph.nodes[b].id)).forEach(index => { const item = document.createElement("li"); item.append(refLink(graph.nodes[index].id)); list.append(item); });
+      detail.append(title, copy, sub, list); drawGraph();
     }
     function resetTransform() { transform = { scale: 1, x: 0, y: 0 }; drawGraph(); }
     function renderGraphStats() {
@@ -1176,7 +1264,7 @@
     }
     function selectCommunity(community) {
       selectedCommunity = selectedCommunity === community.i ? null : community.i;
-      selectedNode = null;
+      selectedNode = null; selectedSource = null;
       document.querySelectorAll(".community").forEach(button => button.setAttribute("aria-pressed", String(Number(button.dataset.community) === selectedCommunity)));
       $("#community-select").value = selectedCommunity === null ? "" : String(selectedCommunity);
       const detail = $("#graph-detail"); detail.replaceChildren();
@@ -1203,7 +1291,7 @@
       });
     }
     function applyGraph(nextGraph, caption) {
-      graph = nextGraph; selectedNode = null; selectedCommunity = null; transform = { scale: 1, x: 0, y: 0 };
+      graph = nextGraph; selectedNode = null; selectedCommunity = null; selectedSource = null; transform = { scale: 1, x: 0, y: 0 };
       assignNodeRadii();
       const modeName = graph.view_mode === "raw" ? "сирі пари" : graph.view_mode === "unexpected" ? "неочікувані асоціації" : "окремі локуси";
       graphCaptionBase = caption + " · " + modeName;

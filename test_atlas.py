@@ -3,6 +3,7 @@ import os
 import unittest
 
 from dataset import BOOK_SECTIONS, VERSE_COUNTS, parse_verse
+from layout_work_graphs import book_lookup, layout_edges
 
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -18,7 +19,7 @@ class AtlasDataTests(unittest.TestCase):
         summary = self.data["summary"]
         self.assertEqual(
             self.data["meta"]["method_version"],
-            "6.2-most-specific-link-dedup",
+            "7.0-full-work-graphs",
         )
         self.assertEqual(summary["tanakh_books"], 39)
         self.assertEqual(summary["tanakh_chapters"], 929)
@@ -32,6 +33,59 @@ class AtlasDataTests(unittest.TestCase):
         self.assertIn('id="method-version"', template)
         self.assertIn("DATA.meta.method_version", template)
         self.assertNotIn("метод 3.0", template)
+
+    def test_work_graphs_are_not_centrality_truncated(self):
+        template_path = os.path.join(HERE, "atlas_template.html")
+        with open(template_path, encoding="utf-8") as handle:
+            template = handle.read()
+        self.assertNotIn(".slice(0, 120)", template)
+        self.assertIn("completeWorkLayout", template)
+        self.assertIn("Показати підграф джерела", template)
+
+    def test_bereshit_rabbah_source_is_complete_and_laid_out(self):
+        source = "Bereshit Rabbah 44:12"
+        source_id = self.data["source_index"].index(source)
+        work = next(
+            item
+            for item in self.data["work_graphs"]["Midrash"]
+            if item["name"] == "Bereshit Rabbah"
+        )
+        source_entry = next(entry for entry in work["sources"] if entry[0] == source_id)
+        refs = {self.data["verse_index"][verse_id] for verse_id in source_entry[1]}
+        self.assertEqual(
+            refs,
+            {
+                "Genesis 12:1", "Genesis 15:5", "Genesis 17:5",
+                "Genesis 20:7", "Genesis 20:17", "Jeremiah 10:2",
+                "Jonah 3:10", "Psalms 17:15", "Psalms 20:2",
+                "Proverbs 8:26", "II Chronicles 7:14",
+            },
+        )
+        laid_out = {
+            verse_id
+            for verse_id, _x, _y in self.data["work_layouts"]["Midrash"]["Bereshit Rabbah"]
+        }
+        self.assertTrue(set(source_entry[1]).issubset(laid_out))
+
+    def test_every_large_work_has_complete_dual_model_layout(self):
+        books = book_lookup(self.data)
+        expected = {}
+        for category, works in self.data["work_graphs"].items():
+            for work in works:
+                nodes = {
+                    node
+                    for edge in layout_edges(work, books)
+                    for node in edge
+                }
+                if len(nodes) > 120:
+                    expected[(category, work["name"])] = nodes
+        actual = {
+            (category, name): {row[0] for row in positions}
+            for category, works in self.data["work_layouts"].items()
+            for name, positions in works.items()
+        }
+        self.assertEqual(actual, expected)
+        self.assertEqual(self.data["meta"]["work_layouts"]["format_version"], 2)
 
     def test_profiles_reach_all_three_tanakh_sections(self):
         sections = set()

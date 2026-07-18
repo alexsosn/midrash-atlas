@@ -21,7 +21,15 @@ Refresh the chapter cache, then generate the atlas:
 ```bash
 python pull.py
 python export_atlas.py
+python layout_work_graphs.py
 ```
+
+The final command uses Graphviz `sfdp` to precompute deterministic layouts for
+complete work graphs larger than 120 nodes and rewrites the data/report with
+those layouts embedded. One stable layout covers both the locus and raw-pair
+models; locus edges determine its geometry and low-weight raw-only links place
+verses that occur solely in the raw model. Smaller graphs retain the in-browser
+force layout.
 
 This reads one cached Links API response for each of the 929 Tanakh chapters
 and writes:
@@ -108,6 +116,9 @@ provenance, and philological-review work still needed before publishable claims.
   components because sparse work-level evidence does not support a stable
   modularity partition. Spring layouts use seed 17, and every displayed edge
   retains its complete list of exact Sefaria source refs.
+- Individual-work graphs contain every vertex and edge in the chosen model.
+  The former top-120 centrality selection has been removed; labels and edge
+  emphasis change with zoom and filters, but the analytical graph does not.
 
 Source APIs: [Links](https://developers.sefaria.org/reference/get-links),
 [Shape](https://developers.sefaria.org/reference/get-shape), and

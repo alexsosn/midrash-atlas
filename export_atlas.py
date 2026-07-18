@@ -10,6 +10,7 @@ Outputs:
 from __future__ import annotations
 
 import itertools
+import hashlib
 import json
 import math
 import os
@@ -23,6 +24,7 @@ from analyze import js_divergence, load_bundle, normalize
 from dataset import BOOK_SECTIONS, CACHE, SELECTIVE, VERSE_COUNTS
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+WORK_LAYOUTS_PATH = os.path.join(HERE, "work_layouts.json")
 
 UA = {
     "Talmud": "Талмуд",
@@ -395,7 +397,7 @@ def build_data():
             "cache": cache,
             "source": "https://www.sefaria.org/api/links/{tref}?with_text=0",
             "shape_source": "https://www.sefaria.org/api/shape/{title}",
-            "method_version": "6.2-most-specific-link-dedup",
+            "method_version": "7.0-full-work-graphs",
             "notes": [
                 "Canonical Tanakh refs are validated against the full Sefaria Tanakh Shape API response.",
                 "A range link has total citation weight 1, divided over its canonical verses.",
@@ -406,6 +408,7 @@ def build_data():
                 "Within-locus pairs are suppressed and each eligible source contributes total graph weight one.",
                 "Unexpected association is shrunken observed/expected lift conditioned on verse popularity and textual-distance band.",
                 "Exported collection slices retain edges supported by a single exact source ref; the interactive support filter starts at one.",
+                "Individual-work graphs retain every vertex and edge in the selected edge model; no centrality top-N selection is applied.",
             ],
         },
         "traditions": traditions,
@@ -451,6 +454,7 @@ def build_data():
         "source_index": [],
         "graphs": {},
         "work_graphs": {},
+        "work_layouts": {},
     }
     range_start = 0
     for book, chapters in VERSE_COUNTS.items():
@@ -492,6 +496,27 @@ def build_data():
         data["work_graphs"][category] = sorted(
             compact_works, key=lambda item: item["name"].casefold()
         )
+    work_payload = json.dumps(
+        data["work_graphs"], ensure_ascii=False, sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+    work_digest = hashlib.sha256(work_payload).hexdigest()
+    data["meta"]["work_evidence_sha256"] = work_digest
+    if os.path.exists(WORK_LAYOUTS_PATH):
+        with open(WORK_LAYOUTS_PATH, encoding="utf-8") as handle:
+            layout_bundle = json.load(handle)
+        if (
+            layout_bundle.get("atlas_method_version") == data["meta"]["method_version"]
+            and layout_bundle.get("work_evidence_sha256") == work_digest
+        ):
+            data["work_layouts"] = layout_bundle["layouts"]
+            data["meta"]["work_layouts"] = {
+                key: layout_bundle[key]
+                for key in (
+                    "format_version", "generated_at", "work_evidence_sha256",
+                    "threshold", "layout_count", "position_count",
+                )
+            }
     return data
 
 
