@@ -431,15 +431,16 @@
   </style>
 </head>
 <body>
-  <a class="skip button" href="#main">До дослідницьких інструментів</a>
-  <nav class="site-nav" aria-label="Головна навігація">
+  <a class="skip button" href="#main" data-i18n="skip">До дослідницьких інструментів</a>
+  <nav class="site-nav" aria-label="Головна навігація" data-i18n-aria="nav.aria">
     <div class="nav-inner">
       <a class="brand" href="#top">Sefaria Citation Atlas</a>
       <div class="nav-links">
-        <a href="#profiles">Профілі</a>
-        <a href="#networks">Графи</a>
-        <a href="#method">Метод</a>
+        <a href="#profiles" data-i18n="nav.profiles">Профілі</a>
+        <a href="#networks" data-i18n="nav.graphs">Графи</a>
+        <a href="#method" data-i18n="nav.method">Метод</a>
         <a class="keep" href="atlas_data.json">JSON ↗</a>
+        <button id="lang-toggle" class="keep" type="button" aria-label="Перемкнути мову" data-i18n-aria="nav.lang">EN</button>
       </div>
     </div>
   </nav>
@@ -448,71 +449,71 @@
     <header class="hero" id="top">
       <div>
         <p class="eyebrow" id="corpus-size">Танах · Links API</p>
-        <h1>Атлас читання Танаху</h1>
-        <p class="hero-copy">Дослідницький інструмент для порівняння того, які вірші цитують вісім категорій Sefaria, які твори стоять за кожною категорією та які текстуальні райони виникають у графах коцитування.</p>
+        <h1 data-i18n="hero.title">Атлас читання Танаху</h1>
+        <p class="hero-copy" data-i18n="hero.copy">Дослідницький інструмент для порівняння того, які вірші цитують вісім категорій Sefaria, які твори стоять за кожною категорією та які текстуальні райони виникають у графах коцитування.</p>
       </div>
       <aside class="hero-aside">
-        <p>Кожен вірш і кожне джерело у графі ведуть безпосередньо до тексту в Sefaria. Дані вбудовані в сторінку: атлас працює офлайн, а переходи до першоджерел — онлайн.</p>
+        <p data-i18n="hero.aside">Кожен вірш і кожне джерело у графі ведуть безпосередньо до тексту в Sefaria. Дані вбудовані в сторінку: атлас працює офлайн, а переходи до першоджерел — онлайн.</p>
         <div class="hero-actions">
-          <a class="button primary" href="#networks">Відкрити граф</a>
-          <a class="button" href="atlas_data.json">Завантажити дані</a>
+          <a class="button primary" href="#networks" data-i18n="hero.openGraph">Відкрити граф</a>
+          <a class="button" href="atlas_data.json" data-i18n="hero.download">Завантажити дані</a>
         </div>
       </aside>
     </header>
 
-    <div class="stats" aria-label="Охоплення даних">
-      <div class="stat"><strong id="stat-traditions">8</strong><span>категорій Sefaria, не історичних таксонів</span></div>
-      <div class="stat"><strong id="stat-verses">—</strong><span>покриття канонічних віршів Танаху</span></div>
-      <div class="stat"><strong id="stat-sources">—</strong><span>точних джерельних посилань</span></div>
-      <div class="stat"><strong id="stat-works">—</strong><span>творів усередині категорій</span></div>
+    <div class="stats" aria-label="Охоплення даних" data-i18n-aria="stats.aria">
+      <div class="stat"><strong id="stat-traditions">8</strong><span data-i18n="stats.collections">категорій Sefaria, не історичних таксонів</span></div>
+      <div class="stat"><strong id="stat-verses">—</strong><span data-i18n="stats.verses">покриття канонічних віршів Танаху</span></div>
+      <div class="stat"><strong id="stat-sources">—</strong><span data-i18n="stats.sources">точних джерельних посилань</span></div>
+      <div class="stat"><strong id="stat-works">—</strong><span data-i18n="stats.works">творів усередині категорій</span></div>
     </div>
 
     <section class="section" id="profiles">
       <div class="section-head">
-        <div><p class="section-no">01 · Профілі цитування</p><h2>Відстань між колекціями</h2></div>
-        <p class="section-intro">Jensen–Shannon divergence порівнює два розподіли цитувань: 0 означає однаковий профіль, 1 — повністю неперетинні профілі. Натисніть клітинку, щоб дослідити пару.</p>
+        <div><p class="section-no" data-i18n="s1.no">01 · Профілі цитування</p><h2 data-i18n="s1.title">Відстань між колекціями</h2></div>
+        <p class="section-intro" data-i18n="s1.intro">Jensen–Shannon divergence порівнює два розподіли цитувань: 0 означає однаковий профіль, 1 — повністю неперетинні профілі. Натисніть клітинку, щоб дослідити пару.</p>
       </div>
 
       <div class="instrument">
-        <div class="instrument-bar"><span>Матриця попарної дивергенції</span><span>JS · base 2</span></div>
+        <div class="instrument-bar"><span data-i18n="s1.bar">Матриця попарної дивергенції</span><span>JS · base 2</span></div>
         <div class="profile-grid">
-          <div class="pane"><div class="heat-scroll"><div class="heatmap" id="heatmap" role="grid" aria-label="Матриця Jensen–Shannon divergence"></div></div></div>
+          <div class="pane"><div class="heat-scroll"><div class="heatmap" id="heatmap" role="grid" aria-label="Матриця Jensen–Shannon divergence" data-i18n-aria="s1.heatmapAria"></div></div></div>
           <aside class="pane" aria-live="polite">
-            <div class="compare-title">Вибрана пара</div>
+            <div class="compare-title" data-i18n="s1.selectedPair">Вибрана пара</div>
             <div class="compare-value" id="compare-value">—</div>
             <div class="compare-pair" id="compare-pair">Оберіть клітинку</div>
             <p class="compare-copy" id="compare-copy">Темніша клітинка означає сильнішу різницю у виборі цитованих віршів.</p>
-            <div class="scale" aria-hidden="true"><div class="scale-ramp"></div><div class="scale-labels"><span>подібні</span><span>відмінні</span></div></div>
+            <div class="scale" aria-hidden="true"><div class="scale-ramp"></div><div class="scale-labels"><span data-i18n="s1.similar">подібні</span><span data-i18n="s1.different">відмінні</span></div></div>
           </aside>
         </div>
         <div class="pair-analysis" aria-live="polite">
-          <div class="pair-head"><div><h3 id="pair-heading">Порівняння віршів</h3><p id="pair-note">Оберіть пару в матриці.</p></div><p>частота на 10 000 одиниць нормалізованої ваги</p></div>
+          <div class="pair-head"><div><h3 id="pair-heading">Порівняння віршів</h3><p id="pair-note">Оберіть пару в матриці.</p></div><p data-i18n="s1.rateNote">частота на 10 000 одиниць нормалізованої ваги</p></div>
           <div class="pair-body">
-            <svg class="scatter-svg" id="pair-scatter" viewBox="0 0 520 380" role="img" aria-label="Порівняння частот цитування віршів у вибраній парі"></svg>
+            <svg class="scatter-svg" id="pair-scatter" viewBox="0 0 520 380" role="img" aria-label="Порівняння частот цитування віршів у вибраній парі" data-i18n-aria="s1.scatterAria"></svg>
             <div class="difference-columns">
               <div class="difference-column"><h4 id="distinct-a-title">Виразніше у A</h4><ol class="comparison-list" id="distinct-a"></ol></div>
-              <div class="difference-column"><h4>Спільне ядро</h4><ol class="comparison-list" id="shared-verses"></ol></div>
+              <div class="difference-column"><h4 data-i18n="s1.sharedCore">Спільне ядро</h4><ol class="comparison-list" id="shared-verses"></ol></div>
               <div class="difference-column"><h4 id="distinct-b-title">Виразніше у B</h4><ol class="comparison-list" id="distinct-b"></ol></div>
             </div>
           </div>
         </div>
         <div class="subgrid">
           <div class="pane">
-            <h3>Ієрархія колекцій</h3>
-            <p class="compare-copy">Середнє зв’язування над тією самою матрицею. Натисніть назву колекції, щоб відкрити її твори.</p>
-            <svg class="chart-svg" id="dendrogram" viewBox="0 0 560 400" role="img" aria-labelledby="dendro-title dendro-desc"><title id="dendro-title">Дендрограма колекцій</title><desc id="dendro-desc">Ієрархічне групування восьми категорій Sefaria за профілями цитування.</desc></svg>
+            <h3 data-i18n="s1.hierarchy">Ієрархія колекцій</h3>
+            <p class="compare-copy" data-i18n="s1.hierarchyCopy">Середнє зв’язування над тією самою матрицею. Натисніть назву колекції, щоб відкрити її твори.</p>
+            <svg class="chart-svg" id="dendrogram" viewBox="0 0 560 400" role="img" aria-labelledby="dendro-title dendro-desc"><title id="dendro-title" data-i18n="s1.dendroTitle">Дендрограма колекцій</title><desc id="dendro-desc" data-i18n="s1.dendroDesc">Ієрархічне групування восьми категорій Sefaria за профілями цитування.</desc></svg>
           </div>
           <div class="pane">
-            <h3>Найцитованіші вірші</h3>
-            <p class="compare-copy">Вага діапазонного посилання дорівнює 1 і розподіляється між усіма канонічними віршами діапазону.</p>
-            <div class="top-controls" id="tradition-controls" aria-label="Оберіть традицію"></div>
+            <h3 data-i18n="s1.topVerses">Найцитованіші вірші</h3>
+            <p class="compare-copy" data-i18n="s1.topVersesCopy">Вага діапазонного посилання дорівнює 1 і розподіляється між усіма канонічними віршами діапазону.</p>
+            <div class="top-controls" id="tradition-controls" aria-label="Оберіть традицію" data-i18n-aria="s1.pickTradition"></div>
             <div class="bars" id="top-bars"></div>
           </div>
         </div>
         <div class="work-explorer">
-          <div class="work-head"><div><h3>Що всередині колекції?</h3><p id="work-note">Внутрішня дендрограма окремих творів за їхніми профілями цитування.</p></div><label class="control" for="collection-select">Колекція<select id="collection-select"></select></label></div>
+          <div class="work-head"><div><h3 data-i18n="s1.insideTitle">Що всередині колекції?</h3><p id="work-note">Внутрішня дендрограма окремих творів за їхніми профілями цитування.</p></div><label class="control" for="collection-select"><span data-i18n="s1.collectionLabel">Колекція</span><select id="collection-select"></select></label></div>
           <div class="work-grid">
-            <svg class="chart-svg" id="work-dendrogram" viewBox="0 0 720 500" role="img" aria-label="Дендрограма творів усередині вибраної колекції"></svg>
+            <svg class="chart-svg" id="work-dendrogram" viewBox="0 0 720 500" role="img" aria-label="Дендрограма творів усередині вибраної колекції" data-i18n-aria="s1.workDendroAria"></svg>
             <div class="work-list" id="work-list"></div>
           </div>
         </div>
@@ -521,28 +522,28 @@
 
     <section class="section" id="networks">
       <div class="section-head">
-        <div><p class="section-no">02 · Графова лабораторія</p><h2>Райони коцитування</h2></div>
-        <p class="section-intro">За замовчуванням сусідні цільові вірші згортаються у цитатні локуси: зв’язки всередині локусу не будуються, а кожне точне джерельне посилання має сумарну вагу 1. Сирий режим зберігає всі пари для аудиту.</p>
+        <div><p class="section-no" data-i18n="s2.no">02 · Графова лабораторія</p><h2 data-i18n="s2.title">Райони коцитування</h2></div>
+        <p class="section-intro" data-i18n="s2.intro">За замовчуванням сусідні цільові вірші згортаються у цитатні локуси: зв’язки всередині локусу не будуються, а кожне точне джерельне посилання має сумарну вагу 1. Сирий режим зберігає всі пари для аудиту.</p>
       </div>
 
       <div class="instrument">
-        <div class="instrument-bar"><span>Колекційний або авторський граф коцитування</span><span id="graph-caption">—</span></div>
+        <div class="instrument-bar"><span data-i18n="s2.bar">Колекційний або авторський граф коцитування</span><span id="graph-caption">—</span></div>
         <div class="graph-layout">
           <div class="graph-main">
             <div class="controls">
-              <div class="control"><label for="graph-category-select">Колекція</label><select id="graph-category-select"></select></div>
-              <div class="control"><label for="graph-work-select">Твір</label><select id="graph-work-select"><option value="">Уся колекція</option></select></div>
-              <div class="control"><label for="graph-mode-select">Модель зв’язку</label><select id="graph-mode-select"><option value="loci">Окремі локуси · рекомендовано</option><option value="unexpected">Неочікувані асоціації</option><option value="raw">Сире коцитування · аудит</option></select></div>
-              <div class="control"><label for="verse-search">Знайти вірш у зрізі</label><input id="verse-search" type="search" list="verse-options" placeholder="Genesis 1:1"><datalist id="verse-options"></datalist></div>
+              <div class="control"><label for="graph-category-select" data-i18n="s2.collection">Колекція</label><select id="graph-category-select"></select></div>
+              <div class="control"><label for="graph-work-select" data-i18n="s2.work">Твір</label><select id="graph-work-select"><option value="">Уся колекція</option></select></div>
+              <div class="control"><label for="graph-mode-select" data-i18n="s2.edgeModel">Модель зв’язку</label><select id="graph-mode-select"><option value="loci" data-i18n="s2.modeLoci">Окремі локуси · рекомендовано</option><option value="unexpected" data-i18n="s2.modeUnexpected">Неочікувані асоціації</option><option value="raw" data-i18n="s2.modeRaw">Сире коцитування · аудит</option></select></div>
+              <div class="control"><label for="verse-search" data-i18n="s2.findVerse">Знайти вірш у зрізі</label><input id="verse-search" type="search" list="verse-options" placeholder="Genesis 1:1"><datalist id="verse-options"></datalist></div>
               <div class="control"><label id="community-select-label" for="community-select">Підсвітити спільноту</label><select id="community-select"><option value="">Усі спільноти</option></select></div>
               <div class="control"><label for="weight-filter"><span id="weight-filter-label">Мінімальна підтримка джерел</span>: <strong id="weight-value">—</strong></label><input id="weight-filter" type="range" min="1" max="20" value="3"></div>
-              <label class="toggle"><input id="show-labels" type="checkbox" checked> підписи</label>
-              <button id="reset-view" type="button">Скинути масштаб</button>
+              <label class="toggle"><input id="show-labels" type="checkbox" checked> <span data-i18n="s2.labels">підписи</span></label>
+              <button id="reset-view" type="button" data-i18n="s2.reset">Скинути масштаб</button>
             </div>
             <div class="canvas-wrap">
-              <canvas id="network" role="img" aria-label="Інтерактивний граф коцитування. Клацніть вузол для деталей."></canvas>
-              <p class="canvas-note">Колесо — масштаб · перетягування — панорама · клік — вибір</p>
-              <div class="node-size-legend" aria-label="Розмір вузла показує зважений степінь від нижчого до вищого у поточному зрізі"><span>зважений степінь</span><i class="node-size-dot small" aria-hidden="true"></i><i class="node-size-dot medium" aria-hidden="true"></i><i class="node-size-dot large" aria-hidden="true"></i></div>
+              <canvas id="network" role="img" aria-label="Інтерактивний граф коцитування. Клацніть вузол для деталей." data-i18n-aria="s2.canvasAria"></canvas>
+              <p class="canvas-note" data-i18n="s2.canvasNote">Колесо — масштаб · перетягування — панорама · клік — вибір</p>
+              <div class="node-size-legend" aria-label="Розмір вузла показує зважений степінь від нижчого до вищого у поточному зрізі" data-i18n-aria="s2.legendAria"><span data-i18n="s2.weightedDegree">зважений степінь</span><i class="node-size-dot small" aria-hidden="true"></i><i class="node-size-dot medium" aria-hidden="true"></i><i class="node-size-dot large" aria-hidden="true"></i></div>
             </div>
           </div>
           <aside class="graph-detail" id="graph-detail" aria-live="polite"><p class="detail-empty">Оберіть вузол на графі або знайдіть вірш, щоб побачити сусідів і джерела зв’язків.</p></aside>
@@ -553,37 +554,37 @@
           <p class="compare-copy" id="community-copy">Натисніть спільноту, щоб підсвітити всі її видимі вузли та внутрішні ребра.</p>
           <div class="community-list" id="community-list"></div>
         </div>
-        <details class="technical-details"><summary>Технічні характеристики графа</summary><div class="technical-grid" id="technical-stats"></div></details>
+        <details class="technical-details"><summary data-i18n="s2.technical">Технічні характеристики графа</summary><div class="technical-grid" id="technical-stats"></div></details>
       </div>
     </section>
 
     <section class="section" id="method">
       <div class="section-head">
-        <div><p class="section-no">03 · Метод і межі</p><h2>Від даних до твердження</h2></div>
-        <p class="section-intro">Атлас є інструментом висування та перевірки гіпотез, а не готовою історією впливів. Кількість лінків відбиває покриття й редакційні практики Sefaria так само, як історичну поведінку текстів.</p>
+        <div><p class="section-no" data-i18n="s3.no">03 · Метод і межі</p><h2 data-i18n="s3.title">Від даних до твердження</h2></div>
+        <p class="section-intro" data-i18n="s3.intro">Атлас є інструментом висування та перевірки гіпотез, а не готовою історією впливів. Кількість лінків відбиває покриття й редакційні практики Sefaria так само, як історичну поведінку текстів.</p>
       </div>
       <div class="method-grid">
         <article>
-          <h3>Вилучення</h3>
+          <h3 data-i18n="s3.extraction">Вилучення</h3>
           <ol>
-            <li><span id="method-files">—</span> відповідей <code>GET /api/links/{tref}</code>, по одній на розділ Танаху.</li>
-            <li>Розгорнуті діапазони обрізаються до запитаного розділу, щоб не дублювати довгі лінки.</li>
-            <li>Канонічність перевіряється за довжинами розділів Shape API.</li>
+            <li><span id="method-files">—</span> <span data-i18n="s3.e1">відповідей <code>GET /api/links/{tref}</code>, по одній на розділ Танаху.</span></li>
+            <li data-i18n="s3.e2">Розгорнуті діапазони обрізаються до запитаного розділу, щоб не дублювати довгі лінки.</li>
+            <li data-i18n="s3.e3">Канонічність перевіряється за довжинами розділів Shape API.</li>
           </ol>
         </article>
         <article>
-          <h3>Виміри</h3>
+          <h3 data-i18n="s3.measures">Виміри</h3>
           <ul>
-            <li>Профілі — нормалізована вага по віршах.</li>
-            <li>Відстань — Jensen–Shannon divergence, base 2.</li>
-            <li>Дендрограми колекцій і творів — agglomerative average linkage.</li>
-            <li>Колекційні спільноти — Louvain, seed 17; у графі окремого твору показано зв’язні компоненти.</li>
-            <li>Цитатний локус об’єднує вірші з проміжком не більше одного невибраного вірша; ребра будуються тільки між різними локусами.</li>
+            <li data-i18n="s3.m1">Профілі — нормалізована вага по віршах.</li>
+            <li data-i18n="s3.m2">Відстань — Jensen–Shannon divergence, base 2.</li>
+            <li data-i18n="s3.m3">Дендрограми колекцій і творів — agglomerative average linkage.</li>
+            <li data-i18n="s3.m4">Колекційні спільноти — Louvain, seed 17; у графі окремого твору показано зв’язні компоненти.</li>
+            <li data-i18n="s3.m5">Цитатний локус об’єднує вірші з проміжком не більше одного невибраного вірша; ребра будуються тільки між різними локусами.</li>
           </ul>
         </article>
         <article>
-          <h3>Застереження</h3>
-          <p>Один широкий лінк не є доказом попарного коцитування кожного вірша. Тому граф відкидає анкери довші за 10 віршів, прибирає зв’язки всередині локусу й розподіляє сумарну вагу кожного джерела 1 між міжлокусними парами. Режим неочікуваності порівнює спостережену вагу з очікуваною для популярності віршів і діапазону текстової відстані.</p>
+          <h3 data-i18n="s3.caveats">Застереження</h3>
+          <p data-i18n="s3.caveat">Один широкий лінк не є доказом попарного коцитування кожного вірша. Тому граф відкидає анкери довші за 10 віршів, прибирає зв’язки всередині локусу й розподіляє сумарну вагу кожного джерела 1 між міжлокусними парами. Режим неочікуваності порівнює спостережену вагу з очікуваною для популярності віршів і діапазону текстової відстані.</p>
           <div class="source-links">
             <a class="button" href="https://developers.sefaria.org/reference/get-links" target="_blank" rel="noopener">Links API ↗</a>
             <a class="button" href="https://developers.sefaria.org/reference/get-shape" target="_blank" rel="noopener">Shape API ↗</a>
@@ -599,9 +600,269 @@
     "use strict";
     const DATA = /*__ATLAS_DATA__*/;
     const $ = (selector) => document.querySelector(selector);
-    const fmt = new Intl.NumberFormat("uk-UA", { maximumFractionDigits: 1 });
-    const precise = new Intl.NumberFormat("uk-UA", { maximumSignificantDigits: 4 });
-    const compact = new Intl.NumberFormat("uk-UA", { notation: "compact", maximumFractionDigits: 1 });
+
+    // ---- Localization -------------------------------------------------
+    // Ukrainian is authored inline in the markup and captured at startup;
+    // English lives in L10N_EN (static text) and MSG.en (dynamic strings).
+    const L10N_EN = {
+      "skip": "Skip to the research instruments",
+      "nav.aria": "Main navigation",
+      "nav.profiles": "Profiles",
+      "nav.graphs": "Graphs",
+      "nav.method": "Method",
+      "nav.lang": "Switch language",
+      "hero.title": "A Reading Atlas of the Tanakh",
+      "hero.copy": "A research instrument for comparing which verses the eight Sefaria collections cite, which works stand behind each collection, and which textual neighborhoods emerge in the co-citation graphs.",
+      "hero.aside": "Every verse and every source in the graph links straight to its text on Sefaria. The data is embedded in the page: the atlas works offline, while the primary sources open online.",
+      "hero.openGraph": "Open the graph",
+      "hero.download": "Download the data",
+      "stats.aria": "Data coverage",
+      "stats.collections": "Sefaria collections, not historical taxa",
+      "stats.verses": "canonical Tanakh verses covered",
+      "stats.sources": "exact source references",
+      "stats.works": "works within the collections",
+      "s1.no": "01 · Citation profiles",
+      "s1.title": "Distance between collections",
+      "s1.intro": "Jensen–Shannon divergence compares two citation distributions: 0 means identical profiles, 1 means fully disjoint ones. Click a cell to explore the pair.",
+      "s1.bar": "Pairwise divergence matrix",
+      "s1.heatmapAria": "Jensen–Shannon divergence matrix",
+      "s1.selectedPair": "Selected pair",
+      "s1.similar": "similar",
+      "s1.different": "different",
+      "s1.rateNote": "rate per 10,000 units of normalized weight",
+      "s1.scatterAria": "Comparison of verse citation rates in the selected pair",
+      "s1.sharedCore": "Shared core",
+      "s1.hierarchy": "Hierarchy of collections",
+      "s1.hierarchyCopy": "Average linkage over the same matrix. Click a collection name to open its works.",
+      "s1.dendroTitle": "Collection dendrogram",
+      "s1.dendroDesc": "Hierarchical grouping of the eight Sefaria collections by citation profile.",
+      "s1.topVerses": "Most-cited verses",
+      "s1.topVersesCopy": "A range link carries total weight 1, split across all canonical verses of the range.",
+      "s1.pickTradition": "Pick a collection",
+      "s1.insideTitle": "What is inside a collection?",
+      "s1.collectionLabel": "Collection",
+      "s1.workDendroAria": "Dendrogram of works within the selected collection",
+      "s2.no": "02 · Graph laboratory",
+      "s2.title": "Co-citation neighborhoods",
+      "s2.intro": "By default, adjacent target verses collapse into citation loci: no edges are built inside a locus, and each exact source reference carries total weight 1. Raw mode keeps every pair for auditing.",
+      "s2.bar": "Collection- or work-level co-citation graph",
+      "s2.collection": "Collection",
+      "s2.work": "Work",
+      "s2.edgeModel": "Edge model",
+      "s2.modeLoci": "Separate loci · recommended",
+      "s2.modeUnexpected": "Unexpected associations",
+      "s2.modeRaw": "Raw co-citation · audit",
+      "s2.findVerse": "Find a verse in this slice",
+      "s2.labels": "labels",
+      "s2.reset": "Reset view",
+      "s2.canvasAria": "Interactive co-citation graph. Click a node for details.",
+      "s2.canvasNote": "Wheel — zoom · drag — pan · click — select",
+      "s2.legendAria": "Node size shows weighted degree from lower to higher in the current slice",
+      "s2.weightedDegree": "weighted degree",
+      "s2.technical": "Technical graph characteristics",
+      "s3.no": "03 · Method and limits",
+      "s3.title": "From data to claims",
+      "s3.intro": "The atlas is an instrument for raising and testing hypotheses, not a ready-made story of influence. Link counts reflect Sefaria's coverage and editorial practices as much as the historical behavior of the texts.",
+      "s3.extraction": "Extraction",
+      "s3.e1": "responses of <code>GET /api/links/{tref}</code>, one per Tanakh chapter.",
+      "s3.e2": "Expanded ranges are clipped to the requested chapter so long links are not double-counted.",
+      "s3.e3": "Canonicity is validated against Shape API chapter lengths.",
+      "s3.measures": "Measures",
+      "s3.m1": "Profiles — normalized weight per verse.",
+      "s3.m2": "Distance — Jensen–Shannon divergence, base 2.",
+      "s3.m3": "Collection and work dendrograms — agglomerative average linkage.",
+      "s3.m4": "Collection communities — Louvain, seed 17; a single work's graph shows connected components.",
+      "s3.m5": "A citation locus merges verses separated by at most one uncited verse; edges are built only between different loci.",
+      "s3.caveats": "Caveats",
+      "s3.caveat": "A single broad link is not evidence of pairwise co-citation of every verse. The graph therefore drops anchors longer than 10 verses, removes within-locus edges, and splits each source's total weight of 1 across cross-locus pairs. Unexpectedness mode compares the observed weight with what verse popularity and the textual-distance band would predict.",
+    };
+    const HTML_KEYS = new Set(["s3.e1"]);
+    const TITLE_EN = "Tanakh Citation Atlas · Sefaria";
+    const DESCRIPTION_EN = "An interactive atlas of Tanakh citation across the Sefaria corpus: profiles, dendrograms, and co-citation graphs.";
+    const MSG = {
+      uk: {
+        corpusSize: (chapters, books) => `${chapters} розділів Танаху · ${books} книжкових індексів Sefaria`,
+        generated: (date) => "Згенеровано " + date,
+        methodVersion: (version) => "Джерело текстуальних зв’язків: Sefaria · метод " + version,
+        isolateSource: "Показати підграф джерела",
+        sourceCopy: (verses, pairs, isWork) => `${verses} віршів · ${pairs} міжлокусних пар у повному графі ${isWork ? "твору" : "колекції"}.`,
+        sourceAllVerses: "Усі вірші цього джерельного сегмента",
+        pairHeading: (a, b) => `${a} ↔ ${b}: конкретні вірші`,
+        pairNote: (a, b) => `Точки над діагоналлю відносно частіші у ${b}; під діагоналлю — у ${a}.`,
+        distinctIn: (name) => "Виразніше: " + name,
+        compareLow: "Близькі профілі: колекції часто надають вагу тим самим віршам. Це описова подібність, а не доказ запозичення.",
+        compareHigh: "Віддалені профілі: розподіли цитувань суттєво розходяться. Конкретні вірші показано безпосередньо нижче.",
+        compareMid: "Проміжна відстань: є спільне ядро цитувань, але помітно різні акценти.",
+        ariaDiag: (name) => `${name}, діагональ`,
+        ariaPair: (a, b, value) => `${a} і ${b}: ${value}`,
+        notEnoughWorks: "Недостатньо творів для кластеризації.",
+        workNote: (name, included, total, weight, verses) => `${name}: показано ${included} із ${total} творів; мінімум ${weight} ваги та ${verses} різних віршів.`,
+        coverage: (total, distinct) => `${total} ваги · ${distinct} цитованих віршів`,
+        frequent: "Часті: ",
+        modeLoci: "окремі локуси",
+        modeUnexpected: "неочікувані асоціації",
+        modeRaw: "сирі пари",
+        captionCounts: (nodes, edges) => ` · ${nodes} вузлів / ${edges} ребер`,
+        emptyDetail: "Оберіть вузол на графі або знайдіть вірш, щоб побачити сусідів і джерела зв’язків.",
+        measureRaw: "сира зважена міра",
+        measureNorm: "нормалізована міра",
+        componentLabel: "зв’язна компонента",
+        communityLabel: "Louvain-спільнота",
+        neighborsUnexpected: "Найнеочікуваніші сусіди",
+        neighborsStrong: "Найсильніші сусіди",
+        weightLine: (support, weight, surprise) => support + " джерел" + (weight === null ? "" : " · вага " + weight) + (surprise === null ? "" : " · " + surprise + " біт"),
+        showSources: (count) => `Показати всі джерельні посилання (${count})`,
+        srcLoci: "джерел із ≥2 локусами",
+        srcRaw: "джерел із ≥2 віршами",
+        workFullNodes: "віршів у повному графі твору",
+        componentsInSlice: "зв’язних компонент у зрізі",
+        uniquePairs: "унікальних пар віршів",
+        versesInGraph: "віршів Танаху у графі",
+        commsSubstantial: "спільнот із ≥10 віршів",
+        modularity: "сила спільнот, modularity Q",
+        weightTotalRaw: "сира сума ваг",
+        weightTotalNorm: "нормалізована сума ваг",
+        supportSum: "сума джерельної підтримки пар",
+        allComponentsStat: "компонент у показаному зрізі",
+        allCommsStat: "усіх спільнот, включно з малими",
+        density: "щільність",
+        resetComponent: "Компоненту скинуто. Оберіть вузол або іншу компоненту.",
+        resetCommunity: "Спільноту скинуто. Оберіть вузол або іншу спільноту.",
+        componentTitle: (n) => "Компонента #" + n,
+        communityTitle: (n) => "Спільнота #" + n,
+        componentCopy: (visible) => `${visible} взаємопов’язаних віршів у показаному графі твору.`,
+        communityCopy: (size, visible) => `${size} віршів у повному графі · ${visible} у видимому зрізі.`,
+        centralVerses: "Центральні вірші",
+        commCard: (n, size) => `#${n} · ${size} віршів`,
+        sliderSurprise: "Мінімальна неочікуваність, біт",
+        sliderSupport: "Мінімальна підтримка джерел",
+        allComponentsOpt: "Усі компоненти",
+        allCommsOpt: "Усі спільноти",
+        headingComponents: "Зв’язні компоненти твору",
+        headingComms: "Найбільші Louvain-спільноти",
+        selectComponentLabel: "Підсвітити компоненту",
+        selectCommunityLabel: "Підсвітити спільноту",
+        copyComponents: "Компонента — група віршів, з’єднана шляхами коцитування в цьому творі. Натисніть її, щоб ізолювати структуру.",
+        copyComms: "Натисніть спільноту, щоб підсвітити всі її видимі вузли та внутрішні ребра. Вісім найбільших мають сталі кольори; менші сірі, доки їх не вибрано.",
+        wholeCollection: "Уся колекція",
+      },
+      en: {
+        corpusSize: (chapters, books) => `${chapters} Tanakh chapters · ${books} Sefaria book indexes`,
+        generated: (date) => "Generated " + date,
+        methodVersion: (version) => "Textual links source: Sefaria · method " + version,
+        isolateSource: "Show this source's subgraph",
+        sourceCopy: (verses, pairs, isWork) => `${verses} verses · ${pairs} cross-locus pairs in the ${isWork ? "work's" : "collection's"} full graph.`,
+        sourceAllVerses: "All verses of this source segment",
+        pairHeading: (a, b) => `${a} ↔ ${b}: the specific verses`,
+        pairNote: (a, b) => `Points above the diagonal are relatively more frequent in ${b}; below it, in ${a}.`,
+        distinctIn: (name) => "More distinctive: " + name,
+        compareLow: "Close profiles: the collections often give weight to the same verses. This is descriptive similarity, not proof of borrowing.",
+        compareHigh: "Distant profiles: the citation distributions diverge substantially. The specific verses are shown directly below.",
+        compareMid: "Intermediate distance: there is a shared citation core, but clearly different emphases.",
+        ariaDiag: (name) => `${name}, diagonal`,
+        ariaPair: (a, b, value) => `${a} and ${b}: ${value}`,
+        notEnoughWorks: "Not enough works to cluster.",
+        workNote: (name, included, total, weight, verses) => `${name}: showing ${included} of ${total} works; minimum ${weight} weight and ${verses} distinct verses.`,
+        coverage: (total, distinct) => `${total} weight · ${distinct} cited verses`,
+        frequent: "Frequent: ",
+        modeLoci: "separate loci",
+        modeUnexpected: "unexpected associations",
+        modeRaw: "raw pairs",
+        captionCounts: (nodes, edges) => ` · ${nodes} nodes / ${edges} edges`,
+        emptyDetail: "Select a node in the graph or search for a verse to see its neighbors and the sources behind the links.",
+        measureRaw: "raw weighted measure",
+        measureNorm: "normalized measure",
+        componentLabel: "connected component",
+        communityLabel: "Louvain community",
+        neighborsUnexpected: "Most unexpected neighbors",
+        neighborsStrong: "Strongest neighbors",
+        weightLine: (support, weight, surprise) => support + " sources" + (weight === null ? "" : " · weight " + weight) + (surprise === null ? "" : " · " + surprise + " bits"),
+        showSources: (count) => `Show all source references (${count})`,
+        srcLoci: "sources with ≥2 loci",
+        srcRaw: "sources with ≥2 verses",
+        workFullNodes: "verses in the work's full graph",
+        componentsInSlice: "connected components in this slice",
+        uniquePairs: "unique verse pairs",
+        versesInGraph: "Tanakh verses in the graph",
+        commsSubstantial: "communities with ≥10 verses",
+        modularity: "community strength, modularity Q",
+        weightTotalRaw: "raw weight total",
+        weightTotalNorm: "normalized weight total",
+        supportSum: "total source support across pairs",
+        allComponentsStat: "components in the visible slice",
+        allCommsStat: "all communities, including small ones",
+        density: "density",
+        resetComponent: "Component cleared. Pick a node or another component.",
+        resetCommunity: "Community cleared. Pick a node or another community.",
+        componentTitle: (n) => "Component #" + n,
+        communityTitle: (n) => "Community #" + n,
+        componentCopy: (visible) => `${visible} interconnected verses in the shown work graph.`,
+        communityCopy: (size, visible) => `${size} verses in the full graph · ${visible} in the visible slice.`,
+        centralVerses: "Central verses",
+        commCard: (n, size) => `#${n} · ${size} verses`,
+        sliderSurprise: "Minimum unexpectedness, bits",
+        sliderSupport: "Minimum source support",
+        allComponentsOpt: "All components",
+        allCommsOpt: "All communities",
+        headingComponents: "The work's connected components",
+        headingComms: "Largest Louvain communities",
+        selectComponentLabel: "Highlight a component",
+        selectCommunityLabel: "Highlight a community",
+        copyComponents: "A component is a group of verses connected by co-citation paths within this work. Click it to isolate the structure.",
+        copyComms: "Click a community to highlight all of its visible nodes and internal edges. The eight largest keep stable colors; smaller ones stay grey until selected.",
+        wholeCollection: "Whole collection",
+      },
+    };
+    const I18N_UK = {};
+    const I18N_UK_ATTR = {};
+    let TITLE_UK = "";
+    let DESCRIPTION_UK = "";
+    function detectLang() {
+      const fromQuery = new URLSearchParams(location.search).get("lang");
+      if (fromQuery === "uk" || fromQuery === "en") return fromQuery;
+      let stored = null;
+      try { stored = localStorage.getItem("atlas-lang"); } catch (_error) { /* storage may be unavailable */ }
+      if (stored === "uk" || stored === "en") return stored;
+      return (navigator.language || "").toLowerCase().startsWith("uk") ? "uk" : "en";
+    }
+    let lang = detectLang();
+    const t = (key, ...args) => {
+      const value = MSG[lang][key];
+      return typeof value === "function" ? value(...args) : value;
+    };
+    function captureUk() {
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const key = el.dataset.i18n;
+        I18N_UK[key] = HTML_KEYS.has(key) ? el.innerHTML : el.textContent;
+      });
+      document.querySelectorAll("[data-i18n-aria]").forEach(el => { I18N_UK_ATTR[el.dataset.i18nAria] = el.getAttribute("aria-label"); });
+      TITLE_UK = document.title;
+      DESCRIPTION_UK = document.querySelector('meta[name="description"]').getAttribute("content");
+    }
+    function applyStatic() {
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const key = el.dataset.i18n;
+        const value = lang === "uk" ? I18N_UK[key] : (L10N_EN[key] ?? I18N_UK[key]);
+        if (HTML_KEYS.has(key)) el.innerHTML = value; else el.textContent = value;
+      });
+      document.querySelectorAll("[data-i18n-aria]").forEach(el => {
+        const key = el.dataset.i18nAria;
+        el.setAttribute("aria-label", lang === "uk" ? I18N_UK_ATTR[key] : (L10N_EN[key] ?? I18N_UK_ATTR[key]));
+      });
+      document.documentElement.lang = lang;
+      document.title = lang === "uk" ? TITLE_UK : TITLE_EN;
+      document.querySelector('meta[name="description"]').setAttribute("content", lang === "uk" ? DESCRIPTION_UK : DESCRIPTION_EN);
+      $("#lang-toggle").textContent = lang === "uk" ? "EN" : "УКР";
+    }
+    let fmt, precise, compact;
+    function buildFormatters() {
+      const locale = lang === "uk" ? "uk-UA" : "en-US";
+      fmt = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
+      precise = new Intl.NumberFormat(locale, { maximumSignificantDigits: 4 });
+      compact = new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 1 });
+    }
+    buildFormatters();
+    // -------------------------------------------------------------------
     const communityVars = ["--series-1", "--series-2", "--series-3", "--series-4", "--series-5", "--series-6", "--series-7", "--series-8"];
 
     function sefariaHref(ref) {
@@ -620,7 +881,7 @@
     function sourceReference(source) {
       return Number.isInteger(source) ? DATA.source_index[source] : source;
     }
-    function translated(name) { return DATA.ua[name] || name; }
+    function translated(name) { return lang === "uk" ? (DATA.ua[name] || name) : name; }
     function leaves(tree, output = []) {
       if (tree.name) output.push(tree.name);
       else tree.c.forEach(child => leaves(child, output));
@@ -633,10 +894,10 @@
       $("#stat-sources").textContent = compact.format(DATA.summary.source_refs);
       $("#stat-works").textContent = fmt.format(DATA.summary.works);
       $("#method-files").textContent = DATA.meta.cache.files;
-      $("#corpus-size").textContent = fmt.format(DATA.summary.tanakh_chapters) + " розділів Танаху · " + fmt.format(DATA.summary.tanakh_books) + " книжкових індексів Sefaria";
+      $("#corpus-size").textContent = t("corpusSize", fmt.format(DATA.summary.tanakh_chapters), fmt.format(DATA.summary.tanakh_books));
       const date = new Date(DATA.meta.generated_at);
-      $("#generated").textContent = "Згенеровано " + date.toLocaleString("uk-UA", { dateStyle: "long", timeStyle: "short" });
-      $("#method-version").textContent = "Джерело текстуальних зв’язків: Sefaria · метод " + DATA.meta.method_version;
+      $("#generated").textContent = t("generated", date.toLocaleString(lang === "uk" ? "uk-UA" : "en-US", { dateStyle: "long", timeStyle: "short" }));
+      $("#method-version").textContent = t("methodVersion", DATA.meta.method_version);
     }
 
     const profileMaps = Object.fromEntries(DATA.traditions.map(name => [name, new Map(DATA.profiles[name])]));
@@ -686,10 +947,10 @@
       const distinctiveA = rows.filter(row => row.weightA >= 2 && row.rateA > row.rateB * 1.5).sort((x, y) => y.score - x.score);
       const distinctiveB = rows.filter(row => row.weightB >= 2 && row.rateB > row.rateA * 1.5).sort((x, y) => x.score - y.score);
       const shared = rows.filter(row => row.weightA >= 2 && row.weightB >= 2).sort((x, y) => y.shared - x.shared);
-      $("#pair-heading").textContent = translated(a) + " ↔ " + translated(b) + ": конкретні вірші";
-      $("#pair-note").textContent = "Точки над діагоналлю відносно частіші у " + translated(b) + "; під діагоналлю — у " + translated(a) + ".";
-      $("#distinct-a-title").textContent = "Виразніше: " + translated(a);
-      $("#distinct-b-title").textContent = "Виразніше: " + translated(b);
+      $("#pair-heading").textContent = t("pairHeading", translated(a), translated(b));
+      $("#pair-note").textContent = t("pairNote", translated(a), translated(b));
+      $("#distinct-a-title").textContent = t("distinctIn", translated(a));
+      $("#distinct-b-title").textContent = t("distinctIn", translated(b));
       renderComparisonList("#distinct-a", distinctiveA, a, b);
       renderComparisonList("#shared-verses", shared, a, b);
       renderComparisonList("#distinct-b", distinctiveB, a, b);
@@ -708,16 +969,13 @@
       $("#compare-pair").textContent = translated(a) + " ↔ " + translated(b);
       const low = value < .25;
       const high = value > .5;
-      $("#compare-copy").textContent = low
-        ? "Близькі профілі: колекції часто надають вагу тим самим віршам. Це описова подібність, а не доказ запозичення."
-        : high
-          ? "Віддалені профілі: розподіли цитувань суттєво розходяться. Конкретні вірші показано безпосередньо нижче."
-          : "Проміжна відстань: є спільне ядро цитувань, але помітно різні акценти.";
+      $("#compare-copy").textContent = low ? t("compareLow") : high ? t("compareHigh") : t("compareMid");
       renderPairComparison(a, b);
     }
     function renderHeatmap() {
       const order = leaves(DATA.dendro);
       const heatmap = $("#heatmap");
+      heatmap.replaceChildren();
       heatmap.style.gridTemplateColumns = "8.4rem repeat(" + order.length + ", var(--cell))";
       heatmap.append(document.createElement("div"));
       order.forEach(name => {
@@ -742,28 +1000,30 @@
           const value = DATA.matrix[row][col];
           button.className = "heat-cell" + (rowName === colName ? " diag" : "");
           button.setAttribute("role", "gridcell");
+          button.dataset.a = rowName;
+          button.dataset.b = colName;
           if (rowName === colName) {
             button.textContent = "—";
             button.disabled = true;
-            button.setAttribute("aria-label", translated(rowName) + ", діагональ");
+            button.setAttribute("aria-label", t("ariaDiag", translated(rowName)));
           } else {
             button.textContent = value.toFixed(2);
             button.style.setProperty("--v", (value / max).toFixed(3));
-            button.setAttribute("aria-label", translated(rowName) + " і " + translated(colName) + ": " + value.toFixed(3));
+            button.setAttribute("aria-label", t("ariaPair", translated(rowName), translated(colName), value.toFixed(3)));
             button.addEventListener("click", () => selectPair(rowName, colName, button));
           }
           heatmap.append(button);
         });
       });
-      const [value, a, b] = DATA.extremes.nearest;
-      const firstButton = [...document.querySelectorAll(".heat-cell")].find(button => button.getAttribute("aria-label")?.includes(translated(a)) && button.getAttribute("aria-label")?.includes(translated(b)));
-      selectPair(a, b, firstButton);
+      const [a, b] = selectedPair || DATA.extremes.nearest.slice(1);
+      const cell = [...heatmap.querySelectorAll(".heat-cell")].find(button => button.dataset.a === a && button.dataset.b === b);
+      selectPair(a, b, cell);
     }
 
     function drawDendrogram(svg, tree, labelFor, onLeaf, dimensions = {}) {
       svg.replaceChildren();
       if (!tree) {
-        const empty = document.createElementNS("http://www.w3.org/2000/svg", "text"); empty.setAttribute("x", 20); empty.setAttribute("y", 40); empty.textContent = "Недостатньо творів для кластеризації."; svg.append(empty); return;
+        const empty = document.createElementNS("http://www.w3.org/2000/svg", "text"); empty.setAttribute("x", 20); empty.setAttribute("y", 40); empty.textContent = t("notEnoughWorks"); svg.append(empty); return;
       }
       const ns = "http://www.w3.org/2000/svg";
       const order = leaves(tree);
@@ -813,24 +1073,30 @@
 
     function renderWorkCollection(category) {
       const collection = DATA.collections[category];
-      $("#work-note").textContent = translated(category) + ": показано " + collection.included + " із " + collection.total_works + " творів; мінімум " + collection.threshold.weight + " ваги та " + collection.threshold.verses + " різних віршів.";
+      $("#work-note").textContent = t("workNote", translated(category), collection.included, collection.total_works, collection.threshold.weight, collection.threshold.verses);
       drawDendrogram($("#work-dendrogram"), collection.dendro, name => name, null, { left: 36, right: 430, top: 22, bottom: 478 });
       const list = $("#work-list"); list.replaceChildren();
       collection.works.forEach(work => {
         const item = document.createElement("div"); item.className = "work-item";
         item.append(refLink(work.name));
-        const coverage = document.createElement("span"); coverage.textContent = fmt.format(work.total) + " ваги · " + fmt.format(work.distinct) + " цитованих віршів"; item.append(coverage);
-        const top = document.createElement("span"); top.append("Часті: ");
+        const coverage = document.createElement("span"); coverage.textContent = t("coverage", fmt.format(work.total), fmt.format(work.distinct)); item.append(coverage);
+        const top = document.createElement("span"); top.append(t("frequent"));
         work.top.slice(0, 3).forEach(([ref], index) => { if (index) top.append(" · "); top.append(refLink(ref)); }); item.append(top);
         list.append(item);
       });
     }
+    function populateCollectionSelect() {
+      const select = $("#collection-select");
+      const previous = select.value;
+      select.replaceChildren();
+      DATA.traditions.forEach(name => { const option = document.createElement("option"); option.value = name; option.textContent = translated(name); select.append(option); });
+      select.value = previous || (DATA.collections["Jewish Thought"] ? "Jewish Thought" : DATA.traditions[0]);
+    }
     function setupWorkExplorer() {
       const select = $("#collection-select");
-      DATA.traditions.forEach(name => { const option = document.createElement("option"); option.value = name; option.textContent = translated(name); select.append(option); });
+      populateCollectionSelect();
       select.addEventListener("change", event => renderWorkCollection(event.target.value));
-      const initial = DATA.collections["Jewish Thought"] ? "Jewish Thought" : DATA.traditions[0];
-      select.value = initial; renderWorkCollection(initial);
+      renderWorkCollection(select.value);
     }
 
     let selectedTradition = DATA.traditions[0];
@@ -852,6 +1118,7 @@
     }
     function renderTraditionControls() {
       const controls = $("#tradition-controls");
+      controls.replaceChildren();
       DATA.traditions.forEach(name => {
         const button = document.createElement("button");
         button.type = "button"; button.dataset.name = name; button.textContent = translated(name);
@@ -1228,7 +1495,7 @@
       const threshold = Number($("#weight-filter").value);
       const active = activeNodes(threshold);
       if (selectedNode !== null) active.add(selectedNode);
-      $("#graph-caption").textContent = graphCaptionBase + " · " + active.size + " вузлів / " + graph.edges.filter(edge => edgePass(edge, threshold)).length + " ребер";
+      $("#graph-caption").textContent = graphCaptionBase + t("captionCounts", active.size, graph.edges.filter(edge => edgePass(edge, threshold)).length);
       const line = cssColor("--line"), muted = cssColor("--muted"), ink = cssColor("--ink"), surface = cssColor("--surface"), accent = cssColor("--accent");
       const neighborSet = selectedNode === null ? null : new Set([selectedNode, ...(graph.nodes[selectedNode].near || graph.nodes[selectedNode].nb.map(item => item[0]))]);
       const sourceNodeSet = selectedSource === null ? null : new Set(graph.edges.filter(edge => edge[5]?.includes(selectedSource)).flatMap(edge => [edge[0], edge[1]]));
@@ -1300,29 +1567,29 @@
       const detail = $("#graph-detail");
       detail.replaceChildren();
       if (index === null) {
-        const empty = document.createElement("p"); empty.className = "detail-empty"; empty.textContent = "Оберіть вузол на графі або знайдіть вірш, щоб побачити сусідів і джерела зв’язків."; detail.append(empty); drawGraph(); return;
+        const empty = document.createElement("p"); empty.className = "detail-empty"; empty.textContent = t("emptyDetail"); detail.append(empty); drawGraph(); return;
       }
       const node = graph.nodes[index];
       const title = document.createElement("h3"); title.className = "detail-ref"; title.append(refLink(node.id));
       const meta = document.createElement("div"); meta.className = "detail-meta";
-      [[fmt.format(node.d), graph.view_mode === "raw" ? "сира зважена міра" : "нормалізована міра"], ["#" + (node.c + 1), graph.method === "components" ? "зв’язна компонента" : "Louvain-спільнота"]].forEach(([value, label]) => {
+      [[fmt.format(node.d), graph.view_mode === "raw" ? t("measureRaw") : t("measureNorm")], ["#" + (node.c + 1), graph.method === "components" ? t("componentLabel") : t("communityLabel")]].forEach(([value, label]) => {
         const box = document.createElement("div"); box.className = "mini-stat"; box.innerHTML = `<strong>${value}</strong><span>${label}</span>`; meta.append(box);
       });
-      const sub = document.createElement("h3"); sub.textContent = graph.view_mode === "unexpected" ? "Найнеочікуваніші сусіди" : "Найсильніші сусіди";
+      const sub = document.createElement("h3"); sub.textContent = graph.view_mode === "unexpected" ? t("neighborsUnexpected") : t("neighborsStrong");
       const list = document.createElement("ul"); list.className = "neighbor-list";
       const detailThreshold = Number($("#weight-filter").value);
       focusedNeighborRows(index, detailThreshold).forEach(([neighborIndex, weight, support, sources, surprise]) => {
         const li = document.createElement("li");
         const line = document.createElement("div"); line.className = "neighbor-line"; line.append(refLink(graph.nodes[neighborIndex].id));
         const w = document.createElement("span"); w.className = "neighbor-weight";
-        w.textContent = fmt.format(support) + " джерел" + (graph.view_mode === "raw" ? "" : " · вага " + precise.format(weight)) + (graph.view_mode === "unexpected" ? " · " + (surprise >= 0 ? "+" : "") + precise.format(surprise) + " біт" : "");
+        w.textContent = t("weightLine", fmt.format(support), graph.view_mode === "raw" ? null : precise.format(weight), graph.view_mode === "unexpected" ? (surprise >= 0 ? "+" : "") + precise.format(surprise) : null);
         line.append(w); li.append(line);
         if (sources.length) {
           const details = document.createElement("details"); details.className = "source-details";
-          const summary = document.createElement("summary"); summary.textContent = "Показати всі джерельні посилання (" + sources.length + ")"; details.append(summary);
+          const summary = document.createElement("summary"); summary.textContent = t("showSources", sources.length); details.append(summary);
           sources.forEach(source => {
             const row = document.createElement("div"); row.append(refLink(sourceReference(source)));
-            const isolate = document.createElement("button"); isolate.type = "button"; isolate.textContent = "Показати підграф джерела"; isolate.addEventListener("click", () => renderSource(source)); row.append(isolate);
+            const isolate = document.createElement("button"); isolate.type = "button"; isolate.textContent = t("isolateSource"); isolate.addEventListener("click", () => renderSource(source)); row.append(isolate);
             details.append(row);
           });
           li.append(details);
@@ -1339,8 +1606,8 @@
       const nodeIndexes = [...new Set(sourceEdges.flatMap(edge => [edge[0], edge[1]]))];
       const detail = $("#graph-detail"); detail.replaceChildren();
       const title = document.createElement("h3"); title.className = "detail-ref"; title.append(refLink(sourceReference(source)));
-      const copy = document.createElement("p"); copy.className = "compare-copy"; copy.textContent = fmt.format(nodeIndexes.length) + " віршів · " + fmt.format(sourceEdges.length) + (graph.method === "components" ? " міжлокусних пар у повному графі твору." : " міжлокусних пар у повному графі колекції.");
-      const sub = document.createElement("h3"); sub.textContent = "Усі вірші цього джерельного сегмента";
+      const copy = document.createElement("p"); copy.className = "compare-copy"; copy.textContent = t("sourceCopy", fmt.format(nodeIndexes.length), fmt.format(sourceEdges.length), graph.method === "components");
+      const sub = document.createElement("h3"); sub.textContent = t("sourceAllVerses");
       const list = document.createElement("ul"); list.className = "neighbor-list";
       nodeIndexes.sort((a, b) => graph.nodes[a].id.localeCompare(graph.nodes[b].id)).forEach(index => { const item = document.createElement("li"); item.append(refLink(graph.nodes[index].id)); list.append(item); });
       detail.append(title, copy, sub, list); drawGraph();
@@ -1348,13 +1615,14 @@
     function resetTransform() { transform = { scale: 1, x: 0, y: 0 }; drawGraph(); }
     function renderGraphStats() {
       const f = graph.full;
+      const sourcesLabel = graph.view_mode === "raw" ? t("srcRaw") : t("srcLoci");
       const stats = graph.method === "components"
-        ? [[fmt.format(f.supporting_sources), graph.view_mode === "raw" ? "джерел із ≥2 віршами" : "джерел із ≥2 локусами"], [fmt.format(f.nodes), "віршів у повному графі твору"], [fmt.format(graph.community_count), "зв’язних компонент у зрізі"], [fmt.format(f.edges), "унікальних пар віршів"]]
-        : [[fmt.format(f.supporting_sources), graph.view_mode === "raw" ? "джерел із ≥2 віршами" : "джерел із ≥2 локусами"], [fmt.format(f.nodes) + " / " + fmt.format(DATA.summary.tanakh_verses), "віршів Танаху у графі"], [fmt.format(graph.substantial_community_count), "спільнот із ≥10 віршів"], [graph.Q.toFixed(3), "сила спільнот, modularity Q"]];
+        ? [[fmt.format(f.supporting_sources), sourcesLabel], [fmt.format(f.nodes), t("workFullNodes")], [fmt.format(graph.community_count), t("componentsInSlice")], [fmt.format(f.edges), t("uniquePairs")]]
+        : [[fmt.format(f.supporting_sources), sourcesLabel], [fmt.format(f.nodes) + " / " + fmt.format(DATA.summary.tanakh_verses), t("versesInGraph")], [fmt.format(graph.substantial_community_count), t("commsSubstantial")], [graph.Q.toFixed(3), t("modularity")]];
       const target = $("#graph-stats"); target.replaceChildren();
       stats.forEach(([value, label]) => { const box = document.createElement("div"); box.className = "mini-stat"; box.innerHTML = `<strong>${value}</strong><span>${label}</span>`; target.append(box); });
       const technical = $("#technical-stats"); technical.replaceChildren();
-      [[fmt.format(f.total_weight), graph.view_mode === "raw" ? "сира сума ваг" : "нормалізована сума ваг"], [fmt.format(f.support_sum), "сума джерельної підтримки пар"], [fmt.format(graph.community_count), graph.method === "components" ? "компонент у показаному зрізі" : "усіх спільнот, включно з малими"], [f.density.toFixed(4), "щільність"]].forEach(([value, label]) => { const box = document.createElement("div"); box.className = "mini-stat"; box.innerHTML = `<strong>${value}</strong><span>${label}</span>`; technical.append(box); });
+      [[fmt.format(f.total_weight), graph.view_mode === "raw" ? t("weightTotalRaw") : t("weightTotalNorm")], [fmt.format(f.support_sum), t("supportSum")], [fmt.format(graph.community_count), graph.method === "components" ? t("allComponentsStat") : t("allCommsStat")], [f.density.toFixed(4), t("density")]].forEach(([value, label]) => { const box = document.createElement("div"); box.className = "mini-stat"; box.innerHTML = `<strong>${value}</strong><span>${label}</span>`; technical.append(box); });
     }
     function selectCommunity(community) {
       selectedCommunity = selectedCommunity === community.i ? null : community.i;
@@ -1363,12 +1631,12 @@
       $("#community-select").value = selectedCommunity === null ? "" : String(selectedCommunity);
       const detail = $("#graph-detail"); detail.replaceChildren();
       if (selectedCommunity === null) {
-        const empty = document.createElement("p"); empty.className = "detail-empty"; empty.textContent = graph.method === "components" ? "Компоненту скинуто. Оберіть вузол або іншу компоненту." : "Спільноту скинуто. Оберіть вузол або іншу спільноту."; detail.append(empty);
+        const empty = document.createElement("p"); empty.className = "detail-empty"; empty.textContent = graph.method === "components" ? t("resetComponent") : t("resetCommunity"); detail.append(empty);
       } else {
-        const title = document.createElement("h3"); title.textContent = (graph.method === "components" ? "Компонента #" : "Спільнота #") + (community.i + 1);
+        const title = document.createElement("h3"); title.textContent = graph.method === "components" ? t("componentTitle", community.i + 1) : t("communityTitle", community.i + 1);
         const visible = graph.nodes.filter(node => node.c === community.i).length;
-        const copy = document.createElement("p"); copy.className = "compare-copy"; copy.textContent = graph.method === "components" ? fmt.format(visible) + " взаємопов’язаних віршів у показаному графі твору." : fmt.format(community.size) + " віршів у повному графі · " + fmt.format(visible) + " у видимому зрізі.";
-        const sub = document.createElement("h3"); sub.textContent = "Центральні вірші";
+        const copy = document.createElement("p"); copy.className = "compare-copy"; copy.textContent = graph.method === "components" ? t("componentCopy", fmt.format(visible)) : t("communityCopy", fmt.format(community.size), fmt.format(visible));
+        const sub = document.createElement("h3"); sub.textContent = t("centralVerses");
         const list = document.createElement("ul"); list.className = "neighbor-list"; community.top.forEach(ref => { const li = document.createElement("li"); li.append(refLink(ref)); list.append(li); });
         detail.append(title, copy, sub, list);
       }
@@ -1378,7 +1646,7 @@
       const target = $("#community-list"); target.replaceChildren();
       graph.comms.slice(0, 8).forEach((community, index) => {
         const article = document.createElement("button"); article.type = "button"; article.className = "community"; article.dataset.community = community.i; article.setAttribute("aria-pressed", "false"); article.style.setProperty("--community", `var(${communityVars[community.i % communityVars.length]})`); article.addEventListener("click", () => selectCommunity(community));
-        const title = document.createElement("strong"); title.textContent = "#" + (community.i + 1) + " · " + fmt.format(community.size) + " віршів";
+        const title = document.createElement("strong"); title.textContent = t("commCard", community.i + 1, fmt.format(community.size));
         const p = document.createElement("p");
         community.top.forEach((ref, refIndex) => { if (refIndex) p.append(" · "); p.append(refLink(ref)); });
         article.append(title, p); target.append(article);
@@ -1387,25 +1655,25 @@
     function applyGraph(nextGraph, caption) {
       graph = nextGraph; selectedNode = null; selectedCommunity = null; selectedSource = null; transform = { scale: 1, x: 0, y: 0 };
       assignNodeRadii();
-      const modeName = graph.view_mode === "raw" ? "сирі пари" : graph.view_mode === "unexpected" ? "неочікувані асоціації" : "окремі локуси";
+      const modeName = graph.view_mode === "raw" ? t("modeRaw") : graph.view_mode === "unexpected" ? t("modeUnexpected") : t("modeLoci");
       graphCaptionBase = caption + " · " + modeName;
       const slider = $("#weight-filter");
       if (graph.view_mode === "unexpected") {
         const maxSurprise = Math.max(graph.min_surprise, ...graph.edges.map(edge => edge[4]));
         slider.min = graph.min_surprise; slider.max = Math.max(graph.min_surprise, Math.ceil(maxSurprise * 10) / 10); slider.step = .1; slider.value = graph.min_surprise;
-        $("#weight-filter-label").textContent = "Мінімальна неочікуваність, біт";
+        $("#weight-filter-label").textContent = t("sliderSurprise");
       } else {
         const maxSupport = Math.max(graph.min_support, ...graph.edges.map(edge => edge[3]));
         slider.min = graph.min_support; slider.max = maxSupport; slider.step = 1; slider.value = graph.min_support;
-        $("#weight-filter-label").textContent = "Мінімальна підтримка джерел";
+        $("#weight-filter-label").textContent = t("sliderSupport");
       }
       const options = $("#verse-options"); options.replaceChildren(); graph.nodes.forEach(node => { const option = document.createElement("option"); option.value = node.id; options.append(option); });
       const communitySelect = $("#community-select"); communitySelect.replaceChildren();
-      const allOption = document.createElement("option"); allOption.value = ""; allOption.textContent = graph.method === "components" ? "Усі компоненти" : "Усі спільноти"; communitySelect.append(allOption);
-      graph.comms.forEach(community => { const option = document.createElement("option"); option.value = community.i; option.textContent = "#" + (community.i + 1) + " · " + fmt.format(community.size) + " віршів"; communitySelect.append(option); });
-      $("#community-heading").textContent = graph.method === "components" ? "Зв’язні компоненти твору" : "Найбільші Louvain-спільноти";
-      $("#community-select-label").textContent = graph.method === "components" ? "Підсвітити компоненту" : "Підсвітити спільноту";
-      $("#community-copy").textContent = graph.method === "components" ? "Компонента — група віршів, з’єднана шляхами коцитування в цьому творі. Натисніть її, щоб ізолювати структуру." : "Натисніть спільноту, щоб підсвітити всі її видимі вузли та внутрішні ребра. Вісім найбільших мають сталі кольори; менші сірі, доки їх не вибрано.";
+      const allOption = document.createElement("option"); allOption.value = ""; allOption.textContent = graph.method === "components" ? t("allComponentsOpt") : t("allCommsOpt"); communitySelect.append(allOption);
+      graph.comms.forEach(community => { const option = document.createElement("option"); option.value = community.i; option.textContent = t("commCard", community.i + 1, fmt.format(community.size)); communitySelect.append(option); });
+      $("#community-heading").textContent = graph.method === "components" ? t("headingComponents") : t("headingComms");
+      $("#community-select-label").textContent = graph.method === "components" ? t("selectComponentLabel") : t("selectCommunityLabel");
+      $("#community-copy").textContent = graph.method === "components" ? t("copyComponents") : t("copyComms");
       $("#verse-search").value = "";
       renderDetail(null); renderGraphStats(); renderCommunities(); drawGraph();
     }
@@ -1428,7 +1696,7 @@
     }
     function populateGraphWorks(category) {
       const select = $("#graph-work-select"); select.replaceChildren();
-      const whole = document.createElement("option"); whole.value = ""; whole.textContent = "Уся колекція"; select.append(whole);
+      const whole = document.createElement("option"); whole.value = ""; whole.textContent = t("wholeCollection"); select.append(whole);
       DATA.work_graphs[category].forEach(work => { const option = document.createElement("option"); option.value = work.name; option.textContent = work.name; select.append(option); });
     }
     function refreshSelectedGraph() {
@@ -1455,12 +1723,47 @@
       setCollectionGraph(graphName);
     }
 
+    function rebuildGraphCategoryOptions() {
+      const select = $("#graph-category-select");
+      const previous = select.value;
+      select.replaceChildren();
+      DATA.traditions.forEach(name => { const option = document.createElement("option"); option.value = name; option.textContent = translated(name); select.append(option); });
+      select.value = previous;
+      const workSelect = $("#graph-work-select");
+      if (workSelect.options.length) workSelect.options[0].textContent = t("wholeCollection");
+    }
+    function setLang(next) {
+      if (next === lang) return;
+      lang = next;
+      try { localStorage.setItem("atlas-lang", lang); } catch (_error) { /* storage may be unavailable */ }
+      buildFormatters();
+      applyStatic();
+      renderSummary();
+      renderHeatmap();
+      renderDendrogram();
+      renderTraditionControls();
+      populateCollectionSelect();
+      renderWorkCollection($("#collection-select").value);
+      const saved = { node: selectedNode, community: selectedCommunity, source: selectedSource, slider: $("#weight-filter").value, transform: { ...transform } };
+      rebuildGraphCategoryOptions();
+      refreshSelectedGraph();
+      $("#weight-filter").value = saved.slider;
+      transform = saved.transform;
+      if (saved.node !== null) renderDetail(saved.node);
+      else if (saved.source !== null) renderSource(saved.source);
+      else if (saved.community !== null) { const community = graph.comms.find(item => item.i === saved.community); if (community) selectCommunity(community); else drawGraph(); }
+      else drawGraph();
+    }
+
+    captureUk();
+    applyStatic();
     renderSummary();
     renderHeatmap();
     renderDendrogram();
     renderTraditionControls();
     setupWorkExplorer();
     setupGraph();
+    $("#lang-toggle").addEventListener("click", () => setLang(lang === "uk" ? "en" : "uk"));
   </script>
 </body>
 </html>
