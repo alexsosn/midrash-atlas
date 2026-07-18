@@ -42,6 +42,15 @@ class AtlasDataTests(unittest.TestCase):
         self.assertIn("completeWorkLayout", template)
         self.assertIn("Показати підграф джерела", template)
 
+    def test_labels_follow_the_active_research_focus(self):
+        template_path = os.path.join(HERE, "atlas_template.html")
+        with open(template_path, encoding="utf-8") as handle:
+            template = handle.read()
+        self.assertIn("function focusedNeighborRows", template)
+        self.assertIn("function labelCandidates", template)
+        self.assertIn("function drawLabels", template)
+        self.assertNotIn("if (index > 15", template)
+
     def test_bereshit_rabbah_source_is_complete_and_laid_out(self):
         source = "Bereshit Rabbah 44:12"
         source_id = self.data["source_index"].index(source)

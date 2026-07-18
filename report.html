@@ -1113,6 +1113,53 @@
       graph.edges.forEach(edge => { if (edgePass(edge, threshold)) { active.add(edge[0]); active.add(edge[1]); } });
       return active;
     }
+    function focusedNeighborRows(index, threshold) {
+      return [...graph.nodes[index].nb]
+        .filter(item => graph.view_mode === "unexpected" ? item[4] >= threshold : item[2] >= threshold)
+        .sort((a, b) => graph.view_mode === "unexpected" ? b[4] - a[4] : b[1] - a[1])
+        .slice(0, 10);
+    }
+    function labelCandidates(active, threshold, sourceNodeSet) {
+      if (selectedNode !== null) {
+        return [selectedNode, ...focusedNeighborRows(selectedNode, threshold).map(item => item[0])];
+      }
+      const byDegree = (a, b) => graph.nodes[b].d - graph.nodes[a].d;
+      if (selectedSource !== null) return [...sourceNodeSet].sort(byDegree);
+      if (selectedCommunity !== null) {
+        return graph.nodes.map((_node, index) => index).filter(index => active.has(index) && graph.nodes[index].c === selectedCommunity).sort(byDegree);
+      }
+      return graph.nodes.map((_node, index) => index).filter(index => active.has(index)).sort(byDegree);
+    }
+    function drawLabels(active, threshold, sourceNodeSet, ink, surface) {
+      const rect = canvas.getBoundingClientRect();
+      const candidates = labelCandidates(active, threshold, sourceNodeSet);
+      const limit = selectedNode !== null ? 11 : selectedSource !== null || selectedCommunity !== null ? 24 : 16;
+      const placed = []; let drawn = 0;
+      ctx.font = "11px " + getComputedStyle(document.body).fontFamily;
+      ctx.lineJoin = "round";
+      function overlaps(box) {
+        return placed.some(other => box.left < other.right + 3 && box.right + 3 > other.left && box.top < other.bottom + 2 && box.bottom + 2 > other.top);
+      }
+      for (const index of candidates) {
+        if (drawn >= limit) break;
+        if (!active.has(index)) continue;
+        const node = graph.nodes[index], point = screenPoint(node), radius = nodeRadius(node) * Math.sqrt(transform.scale);
+        const width = ctx.measureText(node.id).width, height = 13;
+        const options = [
+          { x: point.x + radius + 4, y: point.y, align: "left", baseline: "middle", left: point.x + radius + 2, top: point.y - height / 2 - 1 },
+          { x: point.x - radius - 4, y: point.y, align: "right", baseline: "middle", left: point.x - radius - width - 6, top: point.y - height / 2 - 1 },
+          { x: point.x, y: point.y - radius - 4, align: "center", baseline: "bottom", left: point.x - width / 2 - 2, top: point.y - radius - height - 5 },
+          { x: point.x, y: point.y + radius + 4, align: "center", baseline: "top", left: point.x - width / 2 - 2, top: point.y + radius + 3 },
+        ];
+        const choice = options.map(option => ({ ...option, right: option.left + width + 4, bottom: option.top + height + 2 })).find(option => option.left >= 2 && option.right <= rect.width - 2 && option.top >= 2 && option.bottom <= rect.height - 2 && !overlaps(option));
+        if (!choice) continue;
+        ctx.textAlign = choice.align; ctx.textBaseline = choice.baseline;
+        ctx.strokeStyle = surface; ctx.globalAlpha = .92; ctx.lineWidth = 3; ctx.strokeText(node.id, choice.x, choice.y);
+        ctx.fillStyle = ink; ctx.globalAlpha = index === selectedNode ? 1 : .86; ctx.fillText(node.id, choice.x, choice.y);
+        placed.push(choice); drawn += 1;
+      }
+      ctx.globalAlpha = 1; ctx.textAlign = "start"; ctx.textBaseline = "alphabetic";
+    }
     function drawGraph() {
       const rect = canvas.getBoundingClientRect();
       ctx.clearRect(0, 0, rect.width, rect.height);
@@ -1167,20 +1214,7 @@
         const selected = graph.nodes[selectedNode], p = screenPoint(selected), radius = nodeRadius(selected) * Math.sqrt(transform.scale);
         ctx.beginPath(); ctx.arc(p.x, p.y, radius, 0, Math.PI * 2); ctx.strokeStyle = surface; ctx.lineWidth = 5; ctx.stroke(); ctx.strokeStyle = ink; ctx.lineWidth = 1.5; ctx.stroke();
       }
-      if ($("#show-labels").checked) {
-        ctx.font = "11px " + getComputedStyle(document.body).fontFamily;
-        ctx.textBaseline = "middle";
-        const selectedCommunitySize = selectedCommunity === null ? 0 : graph.nodes.reduce((sum, item) => sum + (item.c === selectedCommunity), 0);
-        graph.nodes.forEach((node, index) => {
-          if (!active.has(index)) return;
-          const selectedClusterLabel = selectedCommunity !== null && node.c === selectedCommunity && selectedCommunitySize <= 32;
-          if (index > 15 && index !== selectedNode && !selectedClusterLabel) return;
-          const p = screenPoint(node); const radius = nodeRadius(node) * Math.sqrt(transform.scale);
-          ctx.fillStyle = ink; ctx.globalAlpha = selectedCommunity !== null && node.c !== selectedCommunity ? .12 : (index === selectedNode ? 1 : .82);
-          ctx.fillText(node.id, p.x + radius + 4, p.y);
-        });
-        ctx.globalAlpha = 1;
-      }
+      if ($("#show-labels").checked) drawLabels(active, threshold, sourceNodeSet, ink, surface);
       $("#weight-value").textContent = graph.view_mode === "unexpected" ? threshold.toFixed(1) : fmt.format(threshold);
     }
     function nearestNode(x, y) {
@@ -1215,7 +1249,7 @@
       const sub = document.createElement("h3"); sub.textContent = graph.view_mode === "unexpected" ? "Найнеочікуваніші сусіди" : "Найсильніші сусіди";
       const list = document.createElement("ul"); list.className = "neighbor-list";
       const detailThreshold = Number($("#weight-filter").value);
-      [...node.nb].filter(item => graph.view_mode === "unexpected" ? item[4] >= detailThreshold : item[2] >= detailThreshold).sort((a, b) => graph.view_mode === "unexpected" ? b[4] - a[4] : b[1] - a[1]).slice(0, 10).forEach(([neighborIndex, weight, support, sources, surprise]) => {
+      focusedNeighborRows(index, detailThreshold).forEach(([neighborIndex, weight, support, sources, surprise]) => {
         const li = document.createElement("li");
         const line = document.createElement("div"); line.className = "neighbor-line"; line.append(refLink(graph.nodes[neighborIndex].id));
         const w = document.createElement("span"); w.className = "neighbor-weight";
