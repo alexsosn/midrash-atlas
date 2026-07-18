@@ -29,10 +29,13 @@ jobs:
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Prepare standalone atlas
+      - name: Prepare atlas and research data
         run: |
           mkdir _site
           cp report.html _site/index.html
+          cp atlas_data.json _site/atlas_data.json
+          cp collection_layouts.json _site/collection_layouts.json
+          cp work_layouts.json _site/work_layouts.json
           touch _site/.nojekyll
 
       - name: Upload Pages artifact
