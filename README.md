@@ -41,8 +41,38 @@ SEFARIA_CACHE=/path/to/cache python export_atlas.py
 Run extraction checks with:
 
 ```bash
-python -m unittest test_dataset.py test_graph_model.py test_atlas.py
+python -m unittest test_dataset.py test_graph_model.py test_atlas.py test_research_export.py
 ```
+
+## Research exports
+
+Turn any collection or individual work into an auditable evidence bundle:
+
+```bash
+python research_export.py --category Kabbalah --list-works
+
+python research_export.py \
+  --category Kabbalah \
+  --work "Maaseh Rokeach on Mishnah" \
+  --mode loci \
+  --min-support 1
+```
+
+Each bundle contains:
+
+- `nodes.csv`, with canonical verse refs, Sefaria links, communities, degree,
+  and weighted degree;
+- `edge-evidence.csv`, in long form with one row per co-citation edge and exact
+  supporting source ref, plus Sefaria links, support, weight, surprise, and
+  textual-distance band;
+- `manifest.json`, recording the atlas SHA-256, method version, data timestamp,
+  selection, filters, graph scope, row counts, and output checksums.
+
+Exports reconstruct the full selected graph from compact source evidence. They
+are not restricted to the top-node slice used for readable browser display.
+
+See [RESEARCH_ROADMAP.md](RESEARCH_ROADMAP.md) for the prioritized validity,
+provenance, and philological-review work still needed before publishable claims.
 
 ## Methodological decisions
 

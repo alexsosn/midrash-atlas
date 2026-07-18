@@ -8,3 +8,4 @@ __pycache__/
 # Local Sefaria API responses and historical working snapshots.
 cache/
 legacy/
+exports/
