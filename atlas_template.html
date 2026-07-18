@@ -1,0 +1,1276 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Інтерактивний атлас цитування Танаху в корпусі Sefaria: профілі, дендрограми та графи коцитування.">
+  <title>Атлас цитування Танаху · Sefaria</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f4f1e9;
+      --surface: #fbfaf6;
+      --surface-2: #ece8de;
+      --ink: #20231f;
+      --muted: #64695f;
+      --line: #d4d0c4;
+      --accent: #176b5c;
+      --accent-2: #9d582f;
+      --accent-soft: rgba(23, 107, 92, .12);
+      --series-1: #176b5c;
+      --series-2: #8c5e2e;
+      --series-3: #6b5aa6;
+      --series-4: #26718d;
+      --series-5: #a14452;
+      --series-6: #6d7b32;
+      --series-7: #a23b7b;
+      --series-8: #4c6aaf;
+      --shadow: 0 18px 50px rgba(39, 38, 31, .08);
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      --serif: Iowan Old Style, Palatino Linotype, Palatino, Georgia, serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      --max: 1240px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #161915;
+        --surface: #1e221d;
+        --surface-2: #292e28;
+        --ink: #eceee7;
+        --muted: #abb1a5;
+        --line: #3b4139;
+        --accent: #61c5b1;
+        --accent-2: #e19a69;
+        --accent-soft: rgba(97, 197, 177, .12);
+        --series-1: #61c5b1;
+        --series-2: #d99c62;
+        --series-3: #aa96e8;
+        --series-4: #67b7d2;
+        --series-5: #dc8190;
+        --series-6: #b6c96b;
+        --series-7: #e27fbd;
+        --series-8: #8da8ef;
+        --shadow: 0 18px 50px rgba(0, 0, 0, .18);
+      }
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 8% 2%, var(--accent-soft), transparent 25rem),
+        var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.55;
+    }
+    a { color: var(--accent); text-underline-offset: .18em; }
+    button, input, select { font: inherit; }
+    button, a.button {
+      border: 1px solid var(--line);
+      border-radius: .45rem;
+      background: var(--surface);
+      color: var(--ink);
+      min-height: 2.5rem;
+      padding: .55rem .8rem;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    button:hover, a.button:hover { border-color: var(--accent); }
+    button[aria-pressed="true"], button.primary, a.button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--bg);
+    }
+    :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+    .skip {
+      position: absolute;
+      left: -9999px;
+      top: .5rem;
+      z-index: 99;
+    }
+    .skip:focus { left: .5rem; }
+    .site-nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 1px solid color-mix(in srgb, var(--line) 75%, transparent);
+      background: color-mix(in srgb, var(--bg) 90%, transparent);
+      backdrop-filter: blur(14px);
+    }
+    .nav-inner {
+      width: min(calc(100% - 2rem), var(--max));
+      min-height: 3.5rem;
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .brand {
+      color: var(--ink);
+      font-family: var(--serif);
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .nav-links { display: flex; gap: 1rem; align-items: center; }
+    .nav-links a { color: var(--muted); font-size: .88rem; text-decoration: none; }
+    .nav-links a:hover { color: var(--ink); }
+    main { overflow: hidden; }
+    .hero {
+      width: min(calc(100% - 2rem), var(--max));
+      margin: 0 auto;
+      padding: clamp(4rem, 9vw, 8rem) 0 clamp(3.5rem, 7vw, 6rem);
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(17rem, .65fr);
+      gap: clamp(2rem, 7vw, 6rem);
+      align-items: end;
+    }
+    .eyebrow, .section-no {
+      margin: 0 0 .8rem;
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: .75rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3 { font-family: var(--serif); line-height: 1.08; }
+    h1 {
+      max-width: 13ch;
+      margin: 0;
+      font-size: clamp(3rem, 8vw, 6.8rem);
+      font-weight: 600;
+      letter-spacing: -.045em;
+    }
+    .hero-copy { max-width: 36rem; margin: 1.5rem 0 0; color: var(--muted); font-size: 1.08rem; }
+    .hero-aside { border-left: 1px solid var(--line); padding-left: 1.5rem; }
+    .hero-aside p { margin: 0 0 1.2rem; color: var(--muted); }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: .6rem; }
+    .stats {
+      width: min(calc(100% - 2rem), var(--max));
+      margin: 0 auto clamp(4rem, 8vw, 7rem);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+    .stat { padding: 1.25rem 1.2rem; border-left: 1px solid var(--line); }
+    .stat:first-child { border-left: 0; }
+    .stat strong { display: block; font-family: var(--serif); font-size: clamp(1.65rem, 4vw, 2.6rem); font-weight: 600; }
+    .stat span { color: var(--muted); font-size: .83rem; }
+    .section {
+      width: min(calc(100% - 2rem), var(--max));
+      margin: 0 auto;
+      padding: clamp(3.5rem, 7vw, 6rem) 0;
+      border-top: 1px solid var(--line);
+    }
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, .75fr) minmax(19rem, .55fr);
+      gap: 2rem;
+      align-items: end;
+      margin-bottom: 2rem;
+    }
+    h2 { margin: 0; font-size: clamp(2rem, 4.8vw, 4.25rem); font-weight: 600; letter-spacing: -.03em; }
+    h3 { margin: 0 0 .5rem; font-size: 1.45rem; font-weight: 600; }
+    .section-intro { margin: 0; color: var(--muted); }
+    .instrument {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: .8rem;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .instrument-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: .8rem 1rem;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: .8rem;
+      font-family: var(--mono);
+    }
+    .profile-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(18rem, .75fr);
+    }
+    .pane { padding: clamp(1rem, 2.5vw, 2rem); min-width: 0; }
+    .pane + .pane { border-left: 1px solid var(--line); }
+    .heat-scroll { overflow-x: auto; padding-bottom: .5rem; }
+    .heatmap {
+      --cell: 3.05rem;
+      display: grid;
+      gap: 3px;
+      width: max-content;
+      min-width: 100%;
+      justify-content: center;
+    }
+    .heat-label {
+      display: flex;
+      align-items: center;
+      justify-content: end;
+      padding-right: .55rem;
+      color: var(--muted);
+      font-size: .78rem;
+      text-align: right;
+    }
+    .heat-col {
+      height: 7.2rem;
+      display: flex;
+      align-items: end;
+      justify-content: center;
+    }
+    .heat-col span {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      color: var(--muted);
+      font-size: .72rem;
+      white-space: nowrap;
+    }
+    .heat-cell {
+      width: var(--cell);
+      height: var(--cell);
+      min-height: 0;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: .22rem;
+      background: color-mix(in oklab, var(--surface-2), var(--accent-2) calc(var(--v) * 72%));
+      color: var(--ink);
+      font-family: var(--mono);
+      font-size: .68rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .heat-cell.diag { background: var(--surface-2); color: var(--muted); cursor: default; }
+    .heat-cell.selected { outline: 3px solid var(--accent); outline-offset: -2px; }
+    .compare-title { color: var(--muted); font-size: .78rem; font-family: var(--mono); text-transform: uppercase; letter-spacing: .08em; }
+    .compare-value { margin: .4rem 0 1rem; font-family: var(--serif); font-size: clamp(2.5rem, 6vw, 4.8rem); line-height: 1; }
+    .compare-pair { font-size: 1.05rem; }
+    .compare-copy { color: var(--muted); font-size: .88rem; }
+    .scale { margin-top: 2rem; }
+    .scale-ramp { height: .5rem; border-radius: 1rem; background: linear-gradient(90deg, var(--surface-2), var(--accent-2)); }
+    .scale-labels { display: flex; justify-content: space-between; margin-top: .35rem; color: var(--muted); font-size: .72rem; }
+    .pair-analysis { border-top: 1px solid var(--line); padding: clamp(1rem, 2.5vw, 2rem); }
+    .pair-head { display: flex; justify-content: space-between; gap: 1rem; align-items: end; margin-bottom: 1rem; }
+    .pair-head p { margin: 0; color: var(--muted); font-size: .8rem; }
+    .pair-body { display: grid; grid-template-columns: minmax(22rem, .9fr) minmax(0, 1.1fr); gap: 2rem; align-items: start; }
+    .scatter-svg { display: block; width: 100%; height: auto; min-height: 22rem; }
+    .scatter-svg .axis { stroke: var(--line); stroke-width: 1; }
+    .scatter-svg .guide { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 5; opacity: .55; }
+    .scatter-svg text { fill: var(--muted); font-family: var(--sans); font-size: 11px; }
+    .scatter-svg .point { fill: var(--accent); opacity: .42; }
+    .scatter-svg .point.shared { fill: var(--accent-2); opacity: .65; }
+    .difference-columns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .difference-column h4 { margin: 0 0 .55rem; font-family: var(--serif); font-size: 1rem; }
+    .comparison-list { list-style: none; padding: 0; margin: 0; }
+    .comparison-list li { padding: .45rem 0; border-top: 1px solid var(--line); font-size: .78rem; }
+    .comparison-list li:first-child { border-top: 0; }
+    .rate { display: block; color: var(--muted); font-family: var(--mono); font-size: .68rem; }
+    .subgrid {
+      display: grid;
+      grid-template-columns: minmax(0, .9fr) minmax(20rem, 1.1fr);
+      border-top: 1px solid var(--line);
+    }
+    .chart-svg { display: block; width: 100%; height: auto; min-height: 23rem; }
+    .chart-svg text { fill: var(--muted); font-family: var(--sans); font-size: 12px; }
+    .chart-svg .branch { fill: none; stroke: var(--line); stroke-width: 1.5; }
+    .chart-svg .leaf-dot { fill: var(--accent); }
+    .chart-svg .join-dot { fill: var(--surface); stroke: var(--accent-2); stroke-width: 1.5; }
+    .chart-svg .interactive-leaf { cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+    .top-controls { display: flex; flex-wrap: wrap; gap: .4rem; margin: 0 0 1.2rem; }
+    .top-controls button { min-height: 2rem; padding: .32rem .55rem; font-size: .78rem; }
+    .bars { display: grid; gap: .66rem; }
+    .bar-row { display: grid; grid-template-columns: minmax(8rem, 1fr) 2.4fr 3.4rem; gap: .65rem; align-items: center; }
+    .bar-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .82rem; }
+    .bar-track { height: .58rem; background: var(--surface-2); border-radius: 2rem; overflow: hidden; }
+    .bar-fill { height: 100%; background: var(--accent); border-radius: inherit; }
+    .bar-value { color: var(--muted); font-family: var(--mono); font-size: .72rem; text-align: right; }
+    .work-explorer { border-top: 1px solid var(--line); padding: clamp(1rem, 2.5vw, 2rem); }
+    .work-head { display: flex; justify-content: space-between; align-items: end; gap: 1rem; margin-bottom: 1rem; }
+    .work-head p { margin: .3rem 0 0; color: var(--muted); font-size: .82rem; }
+    .work-head select { min-height: 2.5rem; padding: .45rem .65rem; border: 1px solid var(--line); border-radius: .45rem; background: var(--bg); color: var(--ink); }
+    .work-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(18rem, .75fr); gap: 1.5rem; }
+    .work-list { align-self: start; }
+    .work-item { padding: .58rem 0; border-top: 1px solid var(--line); }
+    .work-item:first-child { border-top: 0; }
+    .work-item span { display: block; color: var(--muted); font-size: .72rem; }
+    .graph-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem); }
+    .graph-main { min-width: 0; }
+    .controls {
+      min-height: 4rem;
+      padding: .75rem 1rem;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: end;
+      gap: .65rem;
+      flex-wrap: wrap;
+    }
+    .control { display: grid; gap: .22rem; }
+    .control label { color: var(--muted); font-size: .72rem; }
+    .control input[type="search"], .control select {
+      width: min(16rem, 70vw);
+      min-height: 2.5rem;
+      padding: .48rem .65rem;
+      border: 1px solid var(--line);
+      border-radius: .45rem;
+      background: var(--bg);
+      color: var(--ink);
+    }
+    .control input[type="range"] { width: 10rem; accent-color: var(--accent); }
+    .toggle { display: inline-flex; align-items: center; gap: .4rem; min-height: 2.5rem; font-size: .8rem; }
+    .toggle input { accent-color: var(--accent); }
+    .canvas-wrap { position: relative; min-height: 38rem; background: var(--bg); }
+    #network { display: block; width: 100%; height: 38rem; touch-action: none; cursor: grab; }
+    #network.dragging { cursor: grabbing; }
+    .canvas-note {
+      position: absolute;
+      left: .8rem;
+      bottom: .65rem;
+      margin: 0;
+      color: var(--muted);
+      font-size: .7rem;
+      pointer-events: none;
+    }
+    .node-size-legend {
+      position: absolute;
+      right: .8rem;
+      bottom: .55rem;
+      display: flex;
+      align-items: center;
+      gap: .35rem;
+      color: var(--muted);
+      font-size: .7rem;
+      pointer-events: none;
+    }
+    .node-size-dot { display: inline-block; border-radius: 50%; background: var(--muted); opacity: .72; }
+    .node-size-dot.small { width: 6px; height: 6px; }
+    .node-size-dot.medium { width: 14px; height: 14px; }
+    .node-size-dot.large { width: 26px; height: 26px; }
+    .graph-detail { border-left: 1px solid var(--line); padding: 1.2rem; min-width: 0; }
+    .detail-empty { color: var(--muted); }
+    .detail-ref { margin: 0 0 .8rem; font-family: var(--serif); font-size: 1.7rem; }
+    .detail-meta { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; margin: 1rem 0; }
+    .mini-stat { border-top: 1px solid var(--line); padding-top: .5rem; }
+    .mini-stat strong { display: block; font-family: var(--mono); font-size: 1.05rem; }
+    .mini-stat span { color: var(--muted); font-size: .7rem; }
+    .neighbor-list { list-style: none; margin: .8rem 0 0; padding: 0; }
+    .neighbor-list li { padding: .62rem 0; border-top: 1px solid var(--line); }
+    .neighbor-line { display: flex; justify-content: space-between; gap: .7rem; }
+    .neighbor-weight { color: var(--muted); font-family: var(--mono); font-size: .75rem; }
+    .evidence { display: block; margin-top: .18rem; color: var(--muted); font-size: .72rem; overflow-wrap: anywhere; }
+    .graph-footer {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-top: 1px solid var(--line);
+    }
+    .graph-footer .mini-stat { border-top: 0; border-left: 1px solid var(--line); padding: .9rem 1rem; }
+    .graph-footer .mini-stat:first-child { border-left: 0; }
+    .community-block { border-top: 1px solid var(--line); padding: 1.25rem; }
+    .community-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .community { width: 100%; min-height: 0; border: 0; border-top: 3px solid var(--community); border-radius: 0; background: transparent; padding: .65rem 0; text-align: left; }
+    .community[aria-pressed="true"] { background: var(--accent-soft); color: var(--ink); }
+    .community strong { font-family: var(--serif); font-size: 1.15rem; }
+    .community p { margin: .2rem 0 0; color: var(--muted); font-size: .78rem; }
+    .source-details { margin-top: .35rem; }
+    .source-details summary { color: var(--accent); cursor: pointer; font-size: .74rem; }
+    .source-details a { display: block; margin-top: .25rem; font-size: .72rem; overflow-wrap: anywhere; }
+    .technical-details { border-top: 1px solid var(--line); padding: 1rem 1.25rem; }
+    .technical-details summary { cursor: pointer; color: var(--muted); font-size: .8rem; }
+    .technical-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 1rem; }
+    .method-grid { display: grid; grid-template-columns: 1.1fr 1fr 1fr; gap: clamp(1.5rem, 4vw, 3.5rem); }
+    .method-grid h3 { font-size: 1.2rem; }
+    .method-grid p, .method-grid li { color: var(--muted); font-size: .88rem; }
+    .method-grid ol, .method-grid ul { padding-left: 1.1rem; }
+    .method-grid code { font-family: var(--mono); font-size: .8em; }
+    .source-links { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: 1rem; }
+    footer {
+      width: min(calc(100% - 2rem), var(--max));
+      margin: 0 auto;
+      padding: 2rem 0 4rem;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: .78rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    @media (max-width: 900px) {
+      .hero, .section-head { grid-template-columns: 1fr; }
+      .hero-aside { border-left: 0; border-top: 1px solid var(--line); padding: 1.25rem 0 0; }
+      .stats { grid-template-columns: 1fr 1fr; }
+      .stat:nth-child(3) { border-left: 0; border-top: 1px solid var(--line); }
+      .stat:nth-child(4) { border-top: 1px solid var(--line); }
+      .profile-grid, .subgrid, .pair-body, .work-grid, .graph-layout { grid-template-columns: 1fr; }
+      .pane + .pane, .graph-detail { border-left: 0; border-top: 1px solid var(--line); }
+      .graph-footer { grid-template-columns: repeat(3, 1fr); }
+      .graph-footer .mini-stat:nth-child(4) { border-left: 0; border-top: 1px solid var(--line); }
+      .graph-footer .mini-stat:nth-child(5) { border-top: 1px solid var(--line); }
+      .difference-columns { grid-template-columns: 1fr 1fr 1fr; }
+      .community-list, .method-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      .nav-links a:not(.keep) { display: none; }
+      h1 { font-size: clamp(2.75rem, 17vw, 4.7rem); }
+      .stats { grid-template-columns: 1fr; }
+      .stat, .stat:nth-child(3), .stat:nth-child(4) { border-left: 0; border-top: 1px solid var(--line); }
+      .stat:first-child { border-top: 0; }
+      .heatmap { --cell: 2.7rem; }
+      .pair-head, .work-head { align-items: stretch; flex-direction: column; }
+      .difference-columns, .technical-grid { grid-template-columns: 1fr; }
+      .graph-footer { grid-template-columns: 1fr 1fr; }
+      .graph-footer .mini-stat:nth-child(n) { border-left: 1px solid var(--line); border-top: 1px solid var(--line); }
+      .graph-footer .mini-stat:nth-child(odd) { border-left: 0; }
+      .graph-footer .mini-stat:nth-child(-n+2) { border-top: 0; }
+      .canvas-note { display: none; }
+      footer { flex-direction: column; }
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  </style>
+</head>
+<body>
+  <a class="skip button" href="#main">До дослідницьких інструментів</a>
+  <nav class="site-nav" aria-label="Головна навігація">
+    <div class="nav-inner">
+      <a class="brand" href="#top">Sefaria Citation Atlas</a>
+      <div class="nav-links">
+        <a href="#profiles">Профілі</a>
+        <a href="#networks">Графи</a>
+        <a href="#method">Метод</a>
+        <a class="keep" href="atlas_data.json">JSON ↗</a>
+      </div>
+    </div>
+  </nav>
+
+  <main id="main">
+    <header class="hero" id="top">
+      <div>
+        <p class="eyebrow" id="corpus-size">Танах · Links API</p>
+        <h1>Атлас читання Танаху</h1>
+        <p class="hero-copy">Дослідницький інструмент для порівняння того, які вірші цитують вісім категорій Sefaria, які твори стоять за кожною категорією та які текстуальні райони виникають у графах коцитування.</p>
+      </div>
+      <aside class="hero-aside">
+        <p>Кожен вірш і кожне джерело у графі ведуть безпосередньо до тексту в Sefaria. Дані вбудовані в сторінку: атлас працює офлайн, а переходи до першоджерел — онлайн.</p>
+        <div class="hero-actions">
+          <a class="button primary" href="#networks">Відкрити граф</a>
+          <a class="button" href="atlas_data.json">Завантажити дані</a>
+        </div>
+      </aside>
+    </header>
+
+    <div class="stats" aria-label="Охоплення даних">
+      <div class="stat"><strong id="stat-traditions">8</strong><span>категорій Sefaria, не історичних таксонів</span></div>
+      <div class="stat"><strong id="stat-verses">—</strong><span>покриття канонічних віршів Танаху</span></div>
+      <div class="stat"><strong id="stat-sources">—</strong><span>точних джерельних посилань</span></div>
+      <div class="stat"><strong id="stat-works">—</strong><span>творів усередині категорій</span></div>
+    </div>
+
+    <section class="section" id="profiles">
+      <div class="section-head">
+        <div><p class="section-no">01 · Профілі цитування</p><h2>Відстань між колекціями</h2></div>
+        <p class="section-intro">Jensen–Shannon divergence порівнює два розподіли цитувань: 0 означає однаковий профіль, 1 — повністю неперетинні профілі. Натисніть клітинку, щоб дослідити пару.</p>
+      </div>
+
+      <div class="instrument">
+        <div class="instrument-bar"><span>Матриця попарної дивергенції</span><span>JS · base 2</span></div>
+        <div class="profile-grid">
+          <div class="pane"><div class="heat-scroll"><div class="heatmap" id="heatmap" role="grid" aria-label="Матриця Jensen–Shannon divergence"></div></div></div>
+          <aside class="pane" aria-live="polite">
+            <div class="compare-title">Вибрана пара</div>
+            <div class="compare-value" id="compare-value">—</div>
+            <div class="compare-pair" id="compare-pair">Оберіть клітинку</div>
+            <p class="compare-copy" id="compare-copy">Темніша клітинка означає сильнішу різницю у виборі цитованих віршів.</p>
+            <div class="scale" aria-hidden="true"><div class="scale-ramp"></div><div class="scale-labels"><span>подібні</span><span>відмінні</span></div></div>
+          </aside>
+        </div>
+        <div class="pair-analysis" aria-live="polite">
+          <div class="pair-head"><div><h3 id="pair-heading">Порівняння віршів</h3><p id="pair-note">Оберіть пару в матриці.</p></div><p>частота на 10 000 одиниць нормалізованої ваги</p></div>
+          <div class="pair-body">
+            <svg class="scatter-svg" id="pair-scatter" viewBox="0 0 520 380" role="img" aria-label="Порівняння частот цитування віршів у вибраній парі"></svg>
+            <div class="difference-columns">
+              <div class="difference-column"><h4 id="distinct-a-title">Виразніше у A</h4><ol class="comparison-list" id="distinct-a"></ol></div>
+              <div class="difference-column"><h4>Спільне ядро</h4><ol class="comparison-list" id="shared-verses"></ol></div>
+              <div class="difference-column"><h4 id="distinct-b-title">Виразніше у B</h4><ol class="comparison-list" id="distinct-b"></ol></div>
+            </div>
+          </div>
+        </div>
+        <div class="subgrid">
+          <div class="pane">
+            <h3>Ієрархія колекцій</h3>
+            <p class="compare-copy">Середнє зв’язування над тією самою матрицею. Натисніть назву колекції, щоб відкрити її твори.</p>
+            <svg class="chart-svg" id="dendrogram" viewBox="0 0 560 400" role="img" aria-labelledby="dendro-title dendro-desc"><title id="dendro-title">Дендрограма колекцій</title><desc id="dendro-desc">Ієрархічне групування восьми категорій Sefaria за профілями цитування.</desc></svg>
+          </div>
+          <div class="pane">
+            <h3>Найцитованіші вірші</h3>
+            <p class="compare-copy">Вага діапазонного посилання дорівнює 1 і розподіляється між усіма канонічними віршами діапазону.</p>
+            <div class="top-controls" id="tradition-controls" aria-label="Оберіть традицію"></div>
+            <div class="bars" id="top-bars"></div>
+          </div>
+        </div>
+        <div class="work-explorer">
+          <div class="work-head"><div><h3>Що всередині колекції?</h3><p id="work-note">Внутрішня дендрограма окремих творів за їхніми профілями цитування.</p></div><label class="control" for="collection-select">Колекція<select id="collection-select"></select></label></div>
+          <div class="work-grid">
+            <svg class="chart-svg" id="work-dendrogram" viewBox="0 0 720 500" role="img" aria-label="Дендрограма творів усередині вибраної колекції"></svg>
+            <div class="work-list" id="work-list"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="networks">
+      <div class="section-head">
+        <div><p class="section-no">02 · Графова лабораторія</p><h2>Райони коцитування</h2></div>
+        <p class="section-intro">За замовчуванням сусідні цільові вірші згортаються у цитатні локуси: зв’язки всередині локусу не будуються, а кожне точне джерельне посилання має сумарну вагу 1. Сирий режим зберігає всі пари для аудиту.</p>
+      </div>
+
+      <div class="instrument">
+        <div class="instrument-bar"><span>Колекційний або авторський граф коцитування</span><span id="graph-caption">—</span></div>
+        <div class="graph-layout">
+          <div class="graph-main">
+            <div class="controls">
+              <div class="control"><label for="graph-category-select">Колекція</label><select id="graph-category-select"></select></div>
+              <div class="control"><label for="graph-work-select">Твір</label><select id="graph-work-select"><option value="">Уся колекція</option></select></div>
+              <div class="control"><label for="graph-mode-select">Модель зв’язку</label><select id="graph-mode-select"><option value="loci">Окремі локуси · рекомендовано</option><option value="unexpected">Неочікувані асоціації</option><option value="raw">Сире коцитування · аудит</option></select></div>
+              <div class="control"><label for="verse-search">Знайти вірш у зрізі</label><input id="verse-search" type="search" list="verse-options" placeholder="Genesis 1:1"><datalist id="verse-options"></datalist></div>
+              <div class="control"><label id="community-select-label" for="community-select">Підсвітити спільноту</label><select id="community-select"><option value="">Усі спільноти</option></select></div>
+              <div class="control"><label for="weight-filter"><span id="weight-filter-label">Мінімальна підтримка джерел</span>: <strong id="weight-value">—</strong></label><input id="weight-filter" type="range" min="1" max="20" value="3"></div>
+              <label class="toggle"><input id="show-labels" type="checkbox" checked> підписи</label>
+              <button id="reset-view" type="button">Скинути масштаб</button>
+            </div>
+            <div class="canvas-wrap">
+              <canvas id="network" role="img" aria-label="Інтерактивний граф коцитування. Клацніть вузол для деталей."></canvas>
+              <p class="canvas-note">Колесо — масштаб · перетягування — панорама · клік — вибір</p>
+              <div class="node-size-legend" aria-label="Розмір вузла показує зважений степінь від нижчого до вищого у поточному зрізі"><span>зважений степінь</span><i class="node-size-dot small" aria-hidden="true"></i><i class="node-size-dot medium" aria-hidden="true"></i><i class="node-size-dot large" aria-hidden="true"></i></div>
+            </div>
+          </div>
+          <aside class="graph-detail" id="graph-detail" aria-live="polite"><p class="detail-empty">Оберіть вузол на графі або знайдіть вірш, щоб побачити сусідів і джерела зв’язків.</p></aside>
+        </div>
+        <div class="graph-footer" id="graph-stats"></div>
+        <div class="community-block">
+          <h3 id="community-heading">Найбільші Louvain-спільноти</h3>
+          <p class="compare-copy" id="community-copy">Натисніть спільноту, щоб підсвітити всі її видимі вузли та внутрішні ребра.</p>
+          <div class="community-list" id="community-list"></div>
+        </div>
+        <details class="technical-details"><summary>Технічні характеристики графа</summary><div class="technical-grid" id="technical-stats"></div></details>
+      </div>
+    </section>
+
+    <section class="section" id="method">
+      <div class="section-head">
+        <div><p class="section-no">03 · Метод і межі</p><h2>Від даних до твердження</h2></div>
+        <p class="section-intro">Атлас є інструментом висування та перевірки гіпотез, а не готовою історією впливів. Кількість лінків відбиває покриття й редакційні практики Sefaria так само, як історичну поведінку текстів.</p>
+      </div>
+      <div class="method-grid">
+        <article>
+          <h3>Вилучення</h3>
+          <ol>
+            <li><span id="method-files">—</span> відповідей <code>GET /api/links/{tref}</code>, по одній на розділ Танаху.</li>
+            <li>Розгорнуті діапазони обрізаються до запитаного розділу, щоб не дублювати довгі лінки.</li>
+            <li>Канонічність перевіряється за довжинами розділів Shape API.</li>
+          </ol>
+        </article>
+        <article>
+          <h3>Виміри</h3>
+          <ul>
+            <li>Профілі — нормалізована вага по віршах.</li>
+            <li>Відстань — Jensen–Shannon divergence, base 2.</li>
+            <li>Дендрограми колекцій і творів — agglomerative average linkage.</li>
+            <li>Колекційні спільноти — Louvain, seed 17; у графі окремого твору показано зв’язні компоненти.</li>
+            <li>Цитатний локус об’єднує вірші з проміжком не більше одного невибраного вірша; ребра будуються тільки між різними локусами.</li>
+          </ul>
+        </article>
+        <article>
+          <h3>Застереження</h3>
+          <p>Один широкий лінк не є доказом попарного коцитування кожного вірша. Тому граф відкидає анкери довші за 10 віршів, прибирає зв’язки всередині локусу й розподіляє сумарну вагу кожного джерела 1 між міжлокусними парами. Режим неочікуваності порівнює спостережену вагу з очікуваною для популярності віршів і діапазону текстової відстані.</p>
+          <div class="source-links">
+            <a class="button" href="https://developers.sefaria.org/reference/get-links" target="_blank" rel="noopener">Links API ↗</a>
+            <a class="button" href="https://developers.sefaria.org/reference/get-shape" target="_blank" rel="noopener">Shape API ↗</a>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer><span id="generated">Згенеровано —</span><span>Джерело текстуальних зв’язків: Sefaria · метод 3.0</span></footer>
+
+  <script>
+    "use strict";
+    const DATA = /*__ATLAS_DATA__*/;
+    const $ = (selector) => document.querySelector(selector);
+    const fmt = new Intl.NumberFormat("uk-UA", { maximumFractionDigits: 1 });
+    const compact = new Intl.NumberFormat("uk-UA", { notation: "compact", maximumFractionDigits: 1 });
+    const communityVars = ["--series-1", "--series-2", "--series-3", "--series-4", "--series-5", "--series-6", "--series-7", "--series-8"];
+
+    function sefariaHref(ref) {
+      const urlRef = ref.replaceAll(" ", "_").replaceAll(":", ".");
+      return "https://www.sefaria.org/" + encodeURI(urlRef);
+    }
+    function refLink(ref, className = "") {
+      const a = document.createElement("a");
+      a.href = sefariaHref(ref);
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.textContent = ref;
+      if (className) a.className = className;
+      return a;
+    }
+    function sourceReference(source) {
+      return Number.isInteger(source) ? DATA.source_index[source] : source;
+    }
+    function translated(name) { return DATA.ua[name] || name; }
+    function leaves(tree, output = []) {
+      if (tree.name) output.push(tree.name);
+      else tree.c.forEach(child => leaves(child, output));
+      return output;
+    }
+
+    function renderSummary() {
+      $("#stat-traditions").textContent = DATA.traditions.length;
+      $("#stat-verses").textContent = fmt.format(DATA.summary.union_distinct) + " / " + fmt.format(DATA.summary.tanakh_verses);
+      $("#stat-sources").textContent = compact.format(DATA.summary.source_refs);
+      $("#stat-works").textContent = fmt.format(DATA.summary.works);
+      $("#method-files").textContent = DATA.meta.cache.files;
+      $("#corpus-size").textContent = fmt.format(DATA.summary.tanakh_chapters) + " розділів Танаху · " + fmt.format(DATA.summary.tanakh_books) + " книжкових індексів Sefaria";
+      const date = new Date(DATA.meta.generated_at);
+      $("#generated").textContent = "Згенеровано " + date.toLocaleString("uk-UA", { dateStyle: "long", timeStyle: "short" });
+    }
+
+    const profileMaps = Object.fromEntries(DATA.traditions.map(name => [name, new Map(DATA.profiles[name])]));
+    function comparisonRows(a, b) {
+      const mapA = profileMaps[a], mapB = profileMaps[b];
+      const totalA = DATA.totals[a], totalB = DATA.totals[b];
+      const refs = new Set([...mapA.keys(), ...mapB.keys()]);
+      return [...refs].map(ref => {
+        const weightA = mapA.get(ref) || 0, weightB = mapB.get(ref) || 0;
+        const rateA = weightA / totalA * 10000, rateB = weightB / totalB * 10000;
+        const score = Math.log2((rateA + .15) / (rateB + .15)) * Math.sqrt(rateA + rateB);
+        return { ref, weightA, weightB, rateA, rateB, score, shared: Math.min(rateA, rateB) };
+      });
+    }
+    function renderComparisonList(target, rows, a, b) {
+      const list = $(target); list.replaceChildren();
+      rows.slice(0, 8).forEach(row => {
+        const item = document.createElement("li"); item.append(refLink(row.ref));
+        const rate = document.createElement("span"); rate.className = "rate";
+        rate.textContent = translated(a) + " " + row.rateA.toFixed(1) + " · " + translated(b) + " " + row.rateB.toFixed(1);
+        item.append(rate); list.append(item);
+      });
+    }
+    function renderPairScatter(rows, a, b) {
+      const svg = $("#pair-scatter"); svg.replaceChildren();
+      const ns = "http://www.w3.org/2000/svg", left = 48, right = 495, top = 24, bottom = 330;
+      const points = [...rows].sort((x, y) => (y.rateA + y.rateB) - (x.rateA + x.rateB)).slice(0, 360);
+      const maxRate = Math.max(1, ...points.flatMap(row => [row.rateA, row.rateB]));
+      const scale = value => Math.log1p(value) / Math.log1p(maxRate);
+      const x = value => left + scale(value) * (right - left), y = value => bottom - scale(value) * (bottom - top);
+      const axisX = document.createElementNS(ns, "line"); axisX.setAttribute("x1", left); axisX.setAttribute("y1", bottom); axisX.setAttribute("x2", right); axisX.setAttribute("y2", bottom); axisX.setAttribute("class", "axis");
+      const axisY = document.createElementNS(ns, "line"); axisY.setAttribute("x1", left); axisY.setAttribute("y1", top); axisY.setAttribute("x2", left); axisY.setAttribute("y2", bottom); axisY.setAttribute("class", "axis");
+      const guide = document.createElementNS(ns, "line"); guide.setAttribute("x1", left); guide.setAttribute("y1", bottom); guide.setAttribute("x2", right); guide.setAttribute("y2", top); guide.setAttribute("class", "guide");
+      svg.append(axisX, axisY, guide);
+      const xLabel = document.createElementNS(ns, "text"); xLabel.setAttribute("x", right); xLabel.setAttribute("y", 365); xLabel.setAttribute("text-anchor", "end"); xLabel.textContent = translated(a) + " →";
+      const yLabel = document.createElementNS(ns, "text"); yLabel.setAttribute("x", 12); yLabel.setAttribute("y", top); yLabel.textContent = translated(b) + " ↑";
+      svg.append(xLabel, yLabel);
+      points.forEach(row => {
+        const link = document.createElementNS(ns, "a"); link.setAttribute("href", sefariaHref(row.ref)); link.setAttribute("target", "_blank");
+        const circle = document.createElementNS(ns, "circle"); circle.setAttribute("cx", x(row.rateA)); circle.setAttribute("cy", y(row.rateB)); circle.setAttribute("r", row.shared > 0 ? 3.1 : 2.5); circle.setAttribute("class", "point" + (row.shared > 1 ? " shared" : ""));
+        const title = document.createElementNS(ns, "title"); title.textContent = row.ref + " · " + translated(a) + " " + row.rateA.toFixed(1) + " · " + translated(b) + " " + row.rateB.toFixed(1);
+        circle.append(title); link.append(circle); svg.append(link);
+      });
+    }
+    function renderPairComparison(a, b) {
+      const rows = comparisonRows(a, b);
+      const distinctiveA = rows.filter(row => row.weightA >= 2 && row.rateA > row.rateB * 1.5).sort((x, y) => y.score - x.score);
+      const distinctiveB = rows.filter(row => row.weightB >= 2 && row.rateB > row.rateA * 1.5).sort((x, y) => x.score - y.score);
+      const shared = rows.filter(row => row.weightA >= 2 && row.weightB >= 2).sort((x, y) => y.shared - x.shared);
+      $("#pair-heading").textContent = translated(a) + " ↔ " + translated(b) + ": конкретні вірші";
+      $("#pair-note").textContent = "Точки над діагоналлю відносно частіші у " + translated(b) + "; під діагоналлю — у " + translated(a) + ".";
+      $("#distinct-a-title").textContent = "Виразніше: " + translated(a);
+      $("#distinct-b-title").textContent = "Виразніше: " + translated(b);
+      renderComparisonList("#distinct-a", distinctiveA, a, b);
+      renderComparisonList("#shared-verses", shared, a, b);
+      renderComparisonList("#distinct-b", distinctiveB, a, b);
+      renderPairScatter(rows, a, b);
+    }
+
+    let selectedPair = null;
+    function selectPair(a, b, button) {
+      document.querySelectorAll(".heat-cell.selected").forEach(cell => cell.classList.remove("selected"));
+      if (button) button.classList.add("selected");
+      const i = DATA.traditions.indexOf(a);
+      const j = DATA.traditions.indexOf(b);
+      const value = DATA.matrix[i][j];
+      selectedPair = [a, b];
+      $("#compare-value").textContent = value.toFixed(3);
+      $("#compare-pair").textContent = translated(a) + " ↔ " + translated(b);
+      const low = value < .25;
+      const high = value > .5;
+      $("#compare-copy").textContent = low
+        ? "Близькі профілі: колекції часто надають вагу тим самим віршам. Це описова подібність, а не доказ запозичення."
+        : high
+          ? "Віддалені профілі: розподіли цитувань суттєво розходяться. Конкретні вірші показано безпосередньо нижче."
+          : "Проміжна відстань: є спільне ядро цитувань, але помітно різні акценти.";
+      renderPairComparison(a, b);
+    }
+    function renderHeatmap() {
+      const order = leaves(DATA.dendro);
+      const heatmap = $("#heatmap");
+      heatmap.style.gridTemplateColumns = "8.4rem repeat(" + order.length + ", var(--cell))";
+      heatmap.append(document.createElement("div"));
+      order.forEach(name => {
+        const head = document.createElement("div");
+        head.className = "heat-col";
+        const span = document.createElement("span");
+        span.textContent = translated(name);
+        head.append(span);
+        heatmap.append(head);
+      });
+      const values = DATA.matrix.flat().filter(value => value > 0);
+      const max = Math.max(...values);
+      order.forEach(rowName => {
+        const label = document.createElement("div");
+        label.className = "heat-label";
+        label.textContent = translated(rowName);
+        heatmap.append(label);
+        order.forEach(colName => {
+          const button = document.createElement("button");
+          const row = DATA.traditions.indexOf(rowName);
+          const col = DATA.traditions.indexOf(colName);
+          const value = DATA.matrix[row][col];
+          button.className = "heat-cell" + (rowName === colName ? " diag" : "");
+          button.setAttribute("role", "gridcell");
+          if (rowName === colName) {
+            button.textContent = "—";
+            button.disabled = true;
+            button.setAttribute("aria-label", translated(rowName) + ", діагональ");
+          } else {
+            button.textContent = value.toFixed(2);
+            button.style.setProperty("--v", (value / max).toFixed(3));
+            button.setAttribute("aria-label", translated(rowName) + " і " + translated(colName) + ": " + value.toFixed(3));
+            button.addEventListener("click", () => selectPair(rowName, colName, button));
+          }
+          heatmap.append(button);
+        });
+      });
+      const [value, a, b] = DATA.extremes.nearest;
+      const firstButton = [...document.querySelectorAll(".heat-cell")].find(button => button.getAttribute("aria-label")?.includes(translated(a)) && button.getAttribute("aria-label")?.includes(translated(b)));
+      selectPair(a, b, firstButton);
+    }
+
+    function drawDendrogram(svg, tree, labelFor, onLeaf, dimensions = {}) {
+      svg.replaceChildren();
+      if (!tree) {
+        const empty = document.createElementNS("http://www.w3.org/2000/svg", "text"); empty.setAttribute("x", 20); empty.setAttribute("y", 40); empty.textContent = "Недостатньо творів для кластеризації."; svg.append(empty); return;
+      }
+      const ns = "http://www.w3.org/2000/svg";
+      const order = leaves(tree);
+      const maxHeight = tree.h || 1;
+      const left = dimensions.left || 38, right = dimensions.right || 365, top = dimensions.top || 32, bottom = dimensions.bottom || 368;
+      const yFor = new Map(order.map((name, index) => [name, top + index * (bottom - top) / (order.length - 1)]));
+      function xFor(height) { return left + (maxHeight - height) / maxHeight * (right - left); }
+      function line(x1, y1, x2, y2) {
+        const el = document.createElementNS(ns, "line");
+        el.setAttribute("x1", x1); el.setAttribute("y1", y1); el.setAttribute("x2", x2); el.setAttribute("y2", y2); el.setAttribute("class", "branch");
+        svg.append(el);
+      }
+      function walk(node) {
+        if (node.name) {
+          const y = yFor.get(node.name);
+          const dot = document.createElementNS(ns, "circle");
+          dot.setAttribute("cx", right); dot.setAttribute("cy", y); dot.setAttribute("r", 3.5); dot.setAttribute("class", "leaf-dot");
+          const text = document.createElementNS(ns, "text");
+          const label = labelFor(node.name);
+          text.setAttribute("x", right + 12); text.setAttribute("y", y + 4); text.textContent = label.length > 34 ? label.slice(0, 32) + "…" : label;
+          const title = document.createElementNS(ns, "title"); title.textContent = label; text.append(title);
+          if (onLeaf) { text.setAttribute("class", "interactive-leaf"); text.addEventListener("click", () => onLeaf(node.name)); }
+          svg.append(dot, text);
+          return { x: right, y };
+        }
+        const children = node.c.map(walk);
+        const x = xFor(node.h);
+        const y = (children[0].y + children[1].y) / 2;
+        line(x, children[0].y, children[0].x, children[0].y);
+        line(x, children[1].y, children[1].x, children[1].y);
+        line(x, children[0].y, x, children[1].y);
+        const dot = document.createElementNS(ns, "circle");
+        dot.setAttribute("cx", x); dot.setAttribute("cy", y); dot.setAttribute("r", 3); dot.setAttribute("class", "join-dot");
+        const text = document.createElementNS(ns, "text");
+        text.setAttribute("x", Math.max(4, x - 8)); text.setAttribute("y", y - 8); text.setAttribute("text-anchor", "end"); text.textContent = node.h.toFixed(3);
+        svg.append(dot, text);
+        return { x, y };
+      }
+      walk(tree);
+    }
+    function renderDendrogram() {
+      drawDendrogram($("#dendrogram"), DATA.dendro, translated, name => {
+        $("#collection-select").value = name;
+        renderWorkCollection(name);
+      });
+    }
+
+    function renderWorkCollection(category) {
+      const collection = DATA.collections[category];
+      $("#work-note").textContent = translated(category) + ": показано " + collection.included + " із " + collection.total_works + " творів; мінімум " + collection.threshold.weight + " ваги та " + collection.threshold.verses + " різних віршів.";
+      drawDendrogram($("#work-dendrogram"), collection.dendro, name => name, null, { left: 36, right: 430, top: 22, bottom: 478 });
+      const list = $("#work-list"); list.replaceChildren();
+      collection.works.forEach(work => {
+        const item = document.createElement("div"); item.className = "work-item";
+        item.append(refLink(work.name));
+        const coverage = document.createElement("span"); coverage.textContent = fmt.format(work.total) + " ваги · " + fmt.format(work.distinct) + " цитованих віршів"; item.append(coverage);
+        const top = document.createElement("span"); top.append("Часті: ");
+        work.top.slice(0, 3).forEach(([ref], index) => { if (index) top.append(" · "); top.append(refLink(ref)); }); item.append(top);
+        list.append(item);
+      });
+    }
+    function setupWorkExplorer() {
+      const select = $("#collection-select");
+      DATA.traditions.forEach(name => { const option = document.createElement("option"); option.value = name; option.textContent = translated(name); select.append(option); });
+      select.addEventListener("change", event => renderWorkCollection(event.target.value));
+      const initial = DATA.collections["Jewish Thought"] ? "Jewish Thought" : DATA.traditions[0];
+      select.value = initial; renderWorkCollection(initial);
+    }
+
+    let selectedTradition = DATA.traditions[0];
+    function renderTopCited(name) {
+      selectedTradition = name;
+      document.querySelectorAll("#tradition-controls button").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.name === name)));
+      const bars = $("#top-bars");
+      bars.replaceChildren();
+      const rows = DATA.top_cited[name];
+      const max = rows[0][1];
+      rows.forEach(([ref, value]) => {
+        const row = document.createElement("div"); row.className = "bar-row";
+        const label = refLink(ref, "bar-label");
+        const track = document.createElement("div"); track.className = "bar-track"; track.setAttribute("aria-hidden", "true");
+        const fill = document.createElement("div"); fill.className = "bar-fill"; fill.style.width = (value / max * 100).toFixed(1) + "%"; track.append(fill);
+        const number = document.createElement("div"); number.className = "bar-value"; number.textContent = fmt.format(value);
+        row.append(label, track, number); bars.append(row);
+      });
+    }
+    function renderTraditionControls() {
+      const controls = $("#tradition-controls");
+      DATA.traditions.forEach(name => {
+        const button = document.createElement("button");
+        button.type = "button"; button.dataset.name = name; button.textContent = translated(name);
+        button.setAttribute("aria-pressed", "false");
+        button.addEventListener("click", () => renderTopCited(name));
+        controls.append(button);
+      });
+      renderTopCited(selectedTradition);
+    }
+
+    function connectedComponents(nodeIds, edges) {
+      const adjacency = new Map(nodeIds.map(id => [id, []]));
+      edges.forEach(edge => { adjacency.get(edge.a).push(edge.b); adjacency.get(edge.b).push(edge.a); });
+      const seen = new Set(), components = [];
+      nodeIds.forEach(start => {
+        if (seen.has(start)) return;
+        const stack = [start], component = []; seen.add(start);
+        while (stack.length) {
+          const node = stack.pop(); component.push(node);
+          adjacency.get(node).forEach(next => { if (!seen.has(next)) { seen.add(next); stack.push(next); } });
+        }
+        components.push(component);
+      });
+      return components.sort((a, b) => b.length - a.length);
+    }
+    function forceLayout(nodeIds, edges) {
+      const count = nodeIds.length, positions = new Map();
+      nodeIds.forEach((id, index) => {
+        const angle = index * 2.3999632297;
+        const radius = .1 + .38 * Math.sqrt((index + 1) / Math.max(count, 1));
+        positions.set(id, { x: Math.cos(angle) * radius, y: Math.sin(angle) * radius });
+      });
+      const ideal = Math.sqrt(1 / Math.max(count, 1));
+      for (let iteration = 0; iteration < 110; iteration++) {
+        const displacement = new Map(nodeIds.map(id => [id, { x: 0, y: 0 }]));
+        for (let i = 0; i < count; i++) for (let j = i + 1; j < count; j++) {
+          const a = nodeIds[i], b = nodeIds[j], pa = positions.get(a), pb = positions.get(b);
+          let dx = pa.x - pb.x, dy = pa.y - pb.y, distance = Math.max(.004, Math.hypot(dx, dy));
+          const force = ideal * ideal / distance; dx /= distance; dy /= distance;
+          displacement.get(a).x += dx * force; displacement.get(a).y += dy * force;
+          displacement.get(b).x -= dx * force; displacement.get(b).y -= dy * force;
+        }
+        edges.forEach(edge => {
+          const pa = positions.get(edge.a), pb = positions.get(edge.b);
+          let dx = pa.x - pb.x, dy = pa.y - pb.y, distance = Math.max(.004, Math.hypot(dx, dy));
+          const force = distance * distance / ideal * Math.min(2, .6 + edge.weight / 8); dx /= distance; dy /= distance;
+          displacement.get(edge.a).x -= dx * force; displacement.get(edge.a).y -= dy * force;
+          displacement.get(edge.b).x += dx * force; displacement.get(edge.b).y += dy * force;
+        });
+        const temperature = .045 * (1 - iteration / 110);
+        nodeIds.forEach(id => {
+          const p = positions.get(id), d = displacement.get(id), magnitude = Math.max(.001, Math.hypot(d.x, d.y));
+          p.x += d.x / magnitude * Math.min(magnitude, temperature) - p.x * .008;
+          p.y += d.y / magnitude * Math.min(magnitude, temperature) - p.y * .008;
+          p.x = Math.max(-.55, Math.min(.55, p.x)); p.y = Math.max(-.55, Math.min(.55, p.y));
+        });
+      }
+      const xs = nodeIds.map(id => positions.get(id).x), ys = nodeIds.map(id => positions.get(id).y);
+      const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+      nodeIds.forEach(id => { const p = positions.get(id); p.x = maxX === minX ? .5 : (p.x - minX) / (maxX - minX); p.y = maxY === minY ? .5 : (p.y - minY) / (maxY - minY); });
+      return positions;
+    }
+    function bookForVerseId(id) { return DATA.book_ranges.find(([_book, start, end]) => id >= start && id <= end)?.[0]; }
+    function chapterForVerseId(id) { return Number(DATA.verse_index[id].slice(DATA.verse_index[id].lastIndexOf(" ") + 1).split(":")[0]); }
+    function distanceBandIds(a, b) {
+      if (bookForVerseId(a) !== bookForVerseId(b)) return "cross-book";
+      const distance = Math.abs(a - b);
+      if (distance === 1) return "adjacent";
+      if (distance <= 3) return "2-3";
+      if (distance <= 10) return "4-10";
+      if (chapterForVerseId(a) === chapterForVerseId(b)) return "same-chapter";
+      if (distance <= 50) return "same-book-near";
+      return "same-book-far";
+    }
+    function mergeWorkLoci(verseIds) {
+      const ordered = [...new Set(verseIds)].sort((a, b) => a - b), loci = [];
+      ordered.forEach(id => {
+        const current = loci.at(-1), previous = current?.at(-1);
+        if (current && bookForVerseId(id) === bookForVerseId(previous) && id - previous <= 2) current.push(id);
+        else loci.push([id]);
+      });
+      return loci;
+    }
+    function adaptiveWorkThreshold(edges, fullNodeCount) {
+      const supports = [...new Set(edges.map(edge => edge.support))].sort((a, b) => a - b);
+      let chosen = supports[0] || 1;
+      for (const threshold of supports) {
+        const kept = edges.filter(edge => edge.support >= threshold);
+        const nodes = new Set(kept.flatMap(edge => [edge.a, edge.b]));
+        if (kept.length <= 420 && nodes.size >= Math.min(20, fullNodeCount)) { chosen = threshold; break; }
+      }
+      return chosen;
+    }
+    function addWorkSurprise(edges, nodeIds, strengths) {
+      const denominators = new Map(), observed = new Map();
+      for (let i = 0; i < nodeIds.length; i++) for (let j = i + 1; j < nodeIds.length; j++) {
+        const a = nodeIds[i], b = nodeIds[j], band = distanceBandIds(a, b);
+        denominators.set(band, (denominators.get(band) || 0) + strengths.get(a) * strengths.get(b));
+      }
+      edges.forEach(edge => { const band = distanceBandIds(edge.a, edge.b); observed.set(band, (observed.get(band) || 0) + edge.weight); });
+      edges.forEach(edge => {
+        const band = distanceBandIds(edge.a, edge.b), denominator = denominators.get(band) || 0;
+        const expected = denominator ? (observed.get(band) || 0) * strengths.get(edge.a) * strengths.get(edge.b) / denominator : 0;
+        edge.surprise = Math.log2((edge.weight + .25) / (expected + .25));
+      });
+    }
+    function workEdges(workData, mode) {
+      const edgeMap = new Map(); let eligibleSources = 0, locusCount = 0;
+      workData.sources.forEach(([source, verseIds]) => {
+        let pairs;
+        if (mode === "raw") pairs = [...verseIds].sort((a, b) => a - b).flatMap((a, i, all) => all.slice(i + 1).map(b => [[a], [b]]));
+        else {
+          const loci = mergeWorkLoci(verseIds); locusCount += loci.length;
+          if (loci.length < 2) return;
+          pairs = loci.flatMap((left, i) => loci.slice(i + 1).map(right => [left, right]));
+        }
+        if (!pairs.length) return;
+        eligibleSources += 1;
+        const locusPairWeight = mode === "raw" ? 1 : 1 / pairs.length;
+        pairs.forEach(([left, right]) => {
+          const versePairWeight = locusPairWeight / (left.length * right.length);
+          left.forEach(a => right.forEach(b => {
+            const low = Math.min(a, b), high = Math.max(a, b), key = low + "|" + high;
+            if (!edgeMap.has(key)) edgeMap.set(key, { a: low, b: high, weight: 0, sources: new Set() });
+            const edge = edgeMap.get(key); edge.weight += versePairWeight; edge.sources.add(source);
+          }));
+        });
+      });
+      const edges = [...edgeMap.values()].map(edge => ({ ...edge, sources: [...edge.sources], support: edge.sources.size, surprise: 0 }));
+      return { edges, eligibleSources, locusCount: mode === "raw" ? null : locusCount };
+    }
+    function buildWorkGraph(category, workData, requestedMode) {
+      const baseMode = requestedMode === "raw" ? "raw" : "loci", built = workEdges(workData, baseMode);
+      const fullEdges = built.edges, fullNodeIds = [...new Set(fullEdges.flatMap(edge => [edge.a, edge.b]))];
+      const weightedDegree = new Map(fullNodeIds.map(id => [id, 0]));
+      fullEdges.forEach(edge => { weightedDegree.set(edge.a, weightedDegree.get(edge.a) + edge.weight); weightedDegree.set(edge.b, weightedDegree.get(edge.b) + edge.weight); });
+      const keep = new Set([...fullNodeIds].sort((a, b) => weightedDegree.get(b) - weightedDegree.get(a)).slice(0, 120));
+      const induced = fullEdges.filter(edge => keep.has(edge.a) && keep.has(edge.b)), inducedIds = [...keep];
+      addWorkSurprise(induced, inducedIds, weightedDegree);
+      const recommendedSupport = adaptiveWorkThreshold(induced, fullNodeIds.length);
+      let minSurprise = .5;
+      let visibleEdges = induced.filter(edge => requestedMode !== "unexpected" || edge.surprise >= minSurprise);
+      if (requestedMode === "unexpected" && !visibleEdges.length && induced.length) {
+        minSurprise = Math.max(0, Math.min(...induced.map(edge => edge.surprise)));
+        visibleEdges = induced.filter(edge => edge.surprise >= minSurprise);
+      }
+      const visibleIds = [...new Set(visibleEdges.flatMap(edge => [edge.a, edge.b]))];
+      const components = connectedComponents(visibleIds, visibleEdges), componentFor = new Map();
+      components.forEach((component, index) => component.forEach(id => componentFor.set(id, index)));
+      const positions = forceLayout(visibleIds, visibleEdges);
+      const order = [...visibleIds].sort((a, b) => weightedDegree.get(b) - weightedDegree.get(a)), indexFor = new Map(order.map((id, index) => [id, index]));
+      const adjacency = new Map(order.map(id => [id, []]));
+      visibleEdges.forEach(edge => { adjacency.get(edge.a).push([edge.b, edge]); adjacency.get(edge.b).push([edge.a, edge]); });
+      function workNeighborRows(id) {
+        const pairs = adjacency.get(id), seen = new Set(), selected = [];
+        [...pairs].sort((a, b) => b[1].weight - a[1].weight).slice(0, 10).concat([...pairs].sort((a, b) => b[1].surprise - a[1].surprise).slice(0, 10)).forEach(pair => { if (!seen.has(pair[0])) { seen.add(pair[0]); selected.push(pair); } });
+        return selected.map(([neighbor, edge]) => [indexFor.get(neighbor), edge.weight, edge.support, edge.sources, edge.surprise]);
+      }
+      const nodes = order.map(id => ({ id: DATA.verse_index[id], x: positions.get(id).x, y: positions.get(id).y, d: weightedDegree.get(id), c: componentFor.get(id), nb: workNeighborRows(id) }));
+      const edges = visibleEdges.map(edge => [indexFor.get(edge.a), indexFor.get(edge.b), edge.weight, edge.support, edge.surprise]).sort((a, b) => b[2] - a[2]);
+      const comms = components.map((component, index) => ({ i: index, size: component.length, top: [...component].sort((a, b) => weightedDegree.get(b) - weightedDegree.get(a)).slice(0, 6).map(id => DATA.verse_index[id]) }));
+      const nodeCount = fullNodeIds.length, edgeCount = fullEdges.length;
+      return { title: workData.name, category, method: "components", view_mode: requestedMode, nodes, edges, comms, community_count: components.length, substantial_community_count: components.length, min_support: 1, recommended_support: recommendedSupport, min_surprise: minSurprise, Q: null, full: { nodes: nodeCount, edges: edgeCount, total_weight: fullEdges.reduce((sum, edge) => sum + edge.weight, 0), support_sum: fullEdges.reduce((sum, edge) => sum + edge.support, 0), supporting_sources: built.eligibleSources, loci: built.locusCount, avg_degree: nodeCount ? 2 * edgeCount / nodeCount : 0, density: nodeCount > 1 ? 2 * edgeCount / (nodeCount * (nodeCount - 1)) : 0 } };
+    }
+
+    const canvas = $("#network");
+    const ctx = canvas.getContext("2d");
+    let graphName = "Talmud";
+    let graphMode = "loci";
+    let graph = DATA.graphs[graphName][graphMode];
+    let graphCaptionBase = "";
+    let selectedNode = null;
+    let selectedCommunity = null;
+    let transform = { scale: 1, x: 0, y: 0 };
+    let pointer = null;
+    function cssColor(variable) { return getComputedStyle(document.documentElement).getPropertyValue(variable).trim(); }
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.round(rect.width * dpr); canvas.height = Math.round(rect.height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      drawGraph();
+    }
+    function basePoint(node) {
+      const rect = canvas.getBoundingClientRect();
+      const pad = 34;
+      return { x: pad + node.x * (rect.width - 2 * pad), y: pad + node.y * (rect.height - 2 * pad) };
+    }
+    function screenPoint(node) {
+      const p = basePoint(node);
+      const rect = canvas.getBoundingClientRect();
+      return { x: (p.x - rect.width / 2) * transform.scale + rect.width / 2 + transform.x, y: (p.y - rect.height / 2) * transform.scale + rect.height / 2 + transform.y };
+    }
+    function scaledNodeRadius(value, low, high) {
+      if (!(high > low)) return 6;
+      const position = Math.max(0, Math.min(1, (Math.log1p(value) - Math.log1p(low)) / (Math.log1p(high) - Math.log1p(low))));
+      return 3 + 10 * Math.pow(position, 1.1);
+    }
+    function assignNodeRadii() {
+      if (!graph.nodes.length) return;
+      const values = graph.nodes.map(node => node.d).sort((a, b) => a - b);
+      const quantile = p => values[Math.floor((values.length - 1) * p)];
+      const low = quantile(.1), high = quantile(.95);
+      graph.nodes.forEach(node => { node.r = scaledNodeRadius(node.d, low, high); });
+    }
+    function nodeRadius(node) { return node.r || 6; }
+    function edgePass(edge, threshold) { return graph.view_mode === "unexpected" ? edge[4] >= threshold : edge[3] >= threshold; }
+    function activeNodes(threshold) {
+      const active = new Set();
+      graph.edges.forEach(edge => { if (edgePass(edge, threshold)) { active.add(edge[0]); active.add(edge[1]); } });
+      return active;
+    }
+    function drawGraph() {
+      const rect = canvas.getBoundingClientRect();
+      ctx.clearRect(0, 0, rect.width, rect.height);
+      const threshold = Number($("#weight-filter").value);
+      const active = activeNodes(threshold);
+      $("#graph-caption").textContent = graphCaptionBase + " · " + active.size + " вузлів / " + graph.edges.filter(edge => edgePass(edge, threshold)).length + " ребер";
+      const line = cssColor("--line"), muted = cssColor("--muted"), ink = cssColor("--ink"), surface = cssColor("--surface"), accent = cssColor("--accent");
+      const neighborSet = selectedNode === null ? null : new Set([selectedNode, ...graph.nodes[selectedNode].nb.map(item => item[0])]);
+      ctx.lineCap = "round";
+      graph.edges.forEach(edge => {
+        const [a, b, weight, support, surprise] = edge;
+        if (!edgePass(edge, threshold)) return;
+        const visualStrength = graph.view_mode === "unexpected" ? Math.max(.25, surprise) : support;
+        const incident = selectedNode !== null && (a === selectedNode || b === selectedNode);
+        const inCommunity = selectedCommunity !== null && graph.nodes[a].c === selectedCommunity && graph.nodes[b].c === selectedCommunity;
+        const p1 = screenPoint(graph.nodes[a]), p2 = screenPoint(graph.nodes[b]);
+        ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y);
+        if (selectedNode !== null) {
+          ctx.strokeStyle = incident ? accent : line; ctx.globalAlpha = incident ? .9 : .035; ctx.lineWidth = incident ? Math.min(3.2, 1.2 + visualStrength / 6) : .65;
+        } else if (selectedCommunity !== null) {
+          ctx.strokeStyle = inCommunity ? cssColor(communityVars[selectedCommunity % communityVars.length]) : line; ctx.globalAlpha = inCommunity ? .78 : .035; ctx.lineWidth = inCommunity ? Math.min(2.8, 1 + visualStrength / 8) : .65;
+        } else {
+          ctx.strokeStyle = line; ctx.globalAlpha = support === 1 && graph.view_mode !== "unexpected" ? .075 : Math.min(.82, .18 + visualStrength / 16); ctx.lineWidth = support === 1 && graph.view_mode !== "unexpected" ? .5 : Math.min(2.8, .68 + visualStrength / 8);
+        }
+        ctx.stroke();
+      });
+      ctx.globalAlpha = 1;
+      graph.nodes.forEach((node, index) => {
+        if (!active.has(index)) return;
+        const p = screenPoint(node); const radius = nodeRadius(node) * Math.sqrt(transform.scale);
+        ctx.beginPath(); ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = selectedCommunity === node.c ? cssColor(communityVars[node.c % communityVars.length]) : (node.c < communityVars.length ? cssColor(communityVars[node.c]) : muted);
+        if (selectedNode !== null) ctx.globalAlpha = neighborSet.has(index) ? 1 : .18;
+        else if (selectedCommunity !== null) ctx.globalAlpha = node.c === selectedCommunity ? 1 : .12;
+        else ctx.globalAlpha = node.c < communityVars.length ? .92 : .42;
+        ctx.fill(); ctx.globalAlpha = 1;
+        if (index === selectedNode) { ctx.strokeStyle = surface; ctx.lineWidth = 5; ctx.stroke(); ctx.strokeStyle = ink; ctx.lineWidth = 1.5; ctx.stroke(); }
+      });
+      if ($("#show-labels").checked) {
+        ctx.font = "11px " + getComputedStyle(document.body).fontFamily;
+        ctx.textBaseline = "middle";
+        graph.nodes.forEach((node, index) => {
+          if (!active.has(index)) return;
+          const selectedClusterLabel = selectedCommunity !== null && node.c === selectedCommunity && graph.nodes.filter(item => item.c === selectedCommunity).length <= 32;
+          if (index > 15 && index !== selectedNode && !selectedClusterLabel) return;
+          const p = screenPoint(node); const radius = nodeRadius(node) * Math.sqrt(transform.scale);
+          ctx.fillStyle = ink; ctx.globalAlpha = selectedCommunity !== null && node.c !== selectedCommunity ? .12 : (index === selectedNode ? 1 : .82);
+          ctx.fillText(node.id, p.x + radius + 4, p.y);
+        });
+        ctx.globalAlpha = 1;
+      }
+      $("#weight-value").textContent = graph.view_mode === "unexpected" ? threshold.toFixed(1) : fmt.format(threshold);
+    }
+    function nearestNode(x, y) {
+      let best = null, distance = Infinity;
+      const active = activeNodes(Number($("#weight-filter").value));
+      graph.nodes.forEach((node, index) => {
+        if (!active.has(index)) return;
+        const p = screenPoint(node); const d = Math.hypot(p.x - x, p.y - y);
+        if (d < distance) { best = index; distance = d; }
+      });
+      return distance <= 18 ? best : null;
+    }
+    function renderDetail(index) {
+      selectedNode = index;
+      if (index !== null) {
+        selectedCommunity = null;
+        $("#community-select").value = "";
+        document.querySelectorAll(".community").forEach(button => button.setAttribute("aria-pressed", "false"));
+      }
+      const detail = $("#graph-detail");
+      detail.replaceChildren();
+      if (index === null) {
+        const empty = document.createElement("p"); empty.className = "detail-empty"; empty.textContent = "Оберіть вузол на графі або знайдіть вірш, щоб побачити сусідів і джерела зв’язків."; detail.append(empty); drawGraph(); return;
+      }
+      const node = graph.nodes[index];
+      const title = document.createElement("h3"); title.className = "detail-ref"; title.append(refLink(node.id));
+      const meta = document.createElement("div"); meta.className = "detail-meta";
+      [[fmt.format(node.d), graph.view_mode === "raw" ? "сира зважена міра" : "нормалізована міра"], ["#" + (node.c + 1), graph.method === "components" ? "зв’язна компонента" : "Louvain-спільнота"]].forEach(([value, label]) => {
+        const box = document.createElement("div"); box.className = "mini-stat"; box.innerHTML = `<strong>${value}</strong><span>${label}</span>`; meta.append(box);
+      });
+      const sub = document.createElement("h3"); sub.textContent = graph.view_mode === "unexpected" ? "Найнеочікуваніші сусіди" : "Найсильніші сусіди";
+      const list = document.createElement("ul"); list.className = "neighbor-list";
+      const detailThreshold = Number($("#weight-filter").value);
+      [...node.nb].filter(item => graph.view_mode === "unexpected" ? item[4] >= detailThreshold : item[2] >= detailThreshold).sort((a, b) => graph.view_mode === "unexpected" ? b[4] - a[4] : b[1] - a[1]).slice(0, 10).forEach(([neighborIndex, weight, support, sources, surprise]) => {
+        const li = document.createElement("li");
+        const line = document.createElement("div"); line.className = "neighbor-line"; line.append(refLink(graph.nodes[neighborIndex].id));
+        const w = document.createElement("span"); w.className = "neighbor-weight";
+        w.textContent = fmt.format(support) + " джерел" + (graph.view_mode === "raw" ? "" : " · вага " + fmt.format(weight)) + (graph.view_mode === "unexpected" ? " · " + (surprise >= 0 ? "+" : "") + fmt.format(surprise) + " біт" : "");
+        line.append(w); li.append(line);
+        if (sources.length) {
+          const details = document.createElement("details"); details.className = "source-details";
+          const summary = document.createElement("summary"); summary.textContent = "Показати всі джерельні посилання (" + sources.length + ")"; details.append(summary);
+          sources.forEach(source => details.append(refLink(sourceReference(source))));
+          li.append(details);
+        }
+        list.append(li);
+      });
+      detail.append(title, meta, sub, list); drawGraph();
+    }
+    function resetTransform() { transform = { scale: 1, x: 0, y: 0 }; drawGraph(); }
+    function renderGraphStats() {
+      const f = graph.full;
+      const stats = graph.method === "components"
+        ? [[fmt.format(f.supporting_sources), graph.view_mode === "raw" ? "джерел із ≥2 віршами" : "джерел із ≥2 локусами"], [fmt.format(f.nodes), "віршів у повному графі твору"], [fmt.format(graph.community_count), "зв’язних компонент у зрізі"], [fmt.format(f.edges), "унікальних пар віршів"]]
+        : [[fmt.format(f.supporting_sources), graph.view_mode === "raw" ? "джерел із ≥2 віршами" : "джерел із ≥2 локусами"], [fmt.format(f.nodes) + " / " + fmt.format(DATA.summary.tanakh_verses), "віршів Танаху у графі"], [fmt.format(graph.substantial_community_count), "спільнот із ≥10 віршів"], [graph.Q.toFixed(3), "сила спільнот, modularity Q"]];
+      const target = $("#graph-stats"); target.replaceChildren();
+      stats.forEach(([value, label]) => { const box = document.createElement("div"); box.className = "mini-stat"; box.innerHTML = `<strong>${value}</strong><span>${label}</span>`; target.append(box); });
+      const technical = $("#technical-stats"); technical.replaceChildren();
+      [[fmt.format(f.total_weight), graph.view_mode === "raw" ? "сира сума ваг" : "нормалізована сума ваг"], [fmt.format(f.support_sum), "сума джерельної підтримки пар"], [fmt.format(graph.community_count), graph.method === "components" ? "компонент у показаному зрізі" : "усіх спільнот, включно з малими"], [f.density.toFixed(4), "щільність"]].forEach(([value, label]) => { const box = document.createElement("div"); box.className = "mini-stat"; box.innerHTML = `<strong>${value}</strong><span>${label}</span>`; technical.append(box); });
+    }
+    function selectCommunity(community) {
+      selectedCommunity = selectedCommunity === community.i ? null : community.i;
+      selectedNode = null;
+      document.querySelectorAll(".community").forEach(button => button.setAttribute("aria-pressed", String(Number(button.dataset.community) === selectedCommunity)));
+      $("#community-select").value = selectedCommunity === null ? "" : String(selectedCommunity);
+      const detail = $("#graph-detail"); detail.replaceChildren();
+      if (selectedCommunity === null) {
+        const empty = document.createElement("p"); empty.className = "detail-empty"; empty.textContent = graph.method === "components" ? "Компоненту скинуто. Оберіть вузол або іншу компоненту." : "Спільноту скинуто. Оберіть вузол або іншу спільноту."; detail.append(empty);
+      } else {
+        const title = document.createElement("h3"); title.textContent = (graph.method === "components" ? "Компонента #" : "Спільнота #") + (community.i + 1);
+        const visible = graph.nodes.filter(node => node.c === community.i).length;
+        const copy = document.createElement("p"); copy.className = "compare-copy"; copy.textContent = graph.method === "components" ? fmt.format(visible) + " взаємопов’язаних віршів у показаному графі твору." : fmt.format(community.size) + " віршів у повному графі · " + fmt.format(visible) + " у видимому зрізі.";
+        const sub = document.createElement("h3"); sub.textContent = "Центральні вірші";
+        const list = document.createElement("ul"); list.className = "neighbor-list"; community.top.forEach(ref => { const li = document.createElement("li"); li.append(refLink(ref)); list.append(li); });
+        detail.append(title, copy, sub, list);
+      }
+      drawGraph();
+    }
+    function renderCommunities() {
+      const target = $("#community-list"); target.replaceChildren();
+      graph.comms.slice(0, 8).forEach((community, index) => {
+        const article = document.createElement("button"); article.type = "button"; article.className = "community"; article.dataset.community = community.i; article.setAttribute("aria-pressed", "false"); article.style.setProperty("--community", `var(${communityVars[community.i % communityVars.length]})`); article.addEventListener("click", () => selectCommunity(community));
+        const title = document.createElement("strong"); title.textContent = "#" + (community.i + 1) + " · " + fmt.format(community.size) + " віршів";
+        const p = document.createElement("p");
+        community.top.forEach((ref, refIndex) => { if (refIndex) p.append(" · "); p.append(refLink(ref)); });
+        article.append(title, p); target.append(article);
+      });
+    }
+    function applyGraph(nextGraph, caption) {
+      graph = nextGraph; selectedNode = null; selectedCommunity = null; transform = { scale: 1, x: 0, y: 0 };
+      assignNodeRadii();
+      const modeName = graph.view_mode === "raw" ? "сирі пари" : graph.view_mode === "unexpected" ? "неочікувані асоціації" : "окремі локуси";
+      graphCaptionBase = caption + " · " + modeName;
+      const slider = $("#weight-filter");
+      if (graph.view_mode === "unexpected") {
+        const maxSurprise = Math.max(graph.min_surprise, ...graph.edges.map(edge => edge[4]));
+        slider.min = graph.min_surprise; slider.max = Math.max(graph.min_surprise, Math.ceil(maxSurprise * 10) / 10); slider.step = .1; slider.value = graph.min_surprise;
+        $("#weight-filter-label").textContent = "Мінімальна неочікуваність, біт";
+      } else {
+        const maxSupport = Math.max(graph.min_support, ...graph.edges.map(edge => edge[3]));
+        slider.min = graph.min_support; slider.max = maxSupport; slider.step = 1; slider.value = graph.min_support;
+        $("#weight-filter-label").textContent = "Мінімальна підтримка джерел";
+      }
+      const options = $("#verse-options"); options.replaceChildren(); graph.nodes.forEach(node => { const option = document.createElement("option"); option.value = node.id; options.append(option); });
+      const communitySelect = $("#community-select"); communitySelect.replaceChildren();
+      const allOption = document.createElement("option"); allOption.value = ""; allOption.textContent = graph.method === "components" ? "Усі компоненти" : "Усі спільноти"; communitySelect.append(allOption);
+      graph.comms.forEach(community => { const option = document.createElement("option"); option.value = community.i; option.textContent = "#" + (community.i + 1) + " · " + fmt.format(community.size) + " віршів"; communitySelect.append(option); });
+      $("#community-heading").textContent = graph.method === "components" ? "Зв’язні компоненти твору" : "Найбільші Louvain-спільноти";
+      $("#community-select-label").textContent = graph.method === "components" ? "Підсвітити компоненту" : "Підсвітити спільноту";
+      $("#community-copy").textContent = graph.method === "components" ? "Компонента — група віршів, з’єднана шляхами коцитування в цьому творі. Натисніть її, щоб ізолювати структуру." : "Натисніть спільноту, щоб підсвітити всі її видимі вузли та внутрішні ребра. Вісім найбільших мають сталі кольори; менші сірі, доки їх не вибрано.";
+      $("#verse-search").value = "";
+      renderDetail(null); renderGraphStats(); renderCommunities(); drawGraph();
+    }
+    function setCollectionGraph(category) {
+      graphName = category;
+      const base = graphMode === "raw" ? DATA.graphs[category].raw : DATA.graphs[category].loci;
+      applyGraph({ ...base, view_mode: graphMode }, translated(category));
+    }
+    function setWorkGraph(category, workName) {
+      const work = DATA.work_graphs[category].find(item => item.name === workName);
+      if (!work) { setCollectionGraph(category); return; }
+      applyGraph(buildWorkGraph(category, work, graphMode), translated(category) + " · " + work.name);
+    }
+    function populateGraphWorks(category) {
+      const select = $("#graph-work-select"); select.replaceChildren();
+      const whole = document.createElement("option"); whole.value = ""; whole.textContent = "Уся колекція"; select.append(whole);
+      DATA.work_graphs[category].forEach(work => { const option = document.createElement("option"); option.value = work.name; option.textContent = work.name; select.append(option); });
+    }
+    function refreshSelectedGraph() {
+      const workName = $("#graph-work-select").value;
+      if (workName) setWorkGraph(graphName, workName); else setCollectionGraph(graphName);
+    }
+    function setupGraph() {
+      const categorySelect = $("#graph-category-select");
+      DATA.traditions.forEach(name => { const option = document.createElement("option"); option.value = name; option.textContent = translated(name); categorySelect.append(option); });
+      categorySelect.value = graphName; populateGraphWorks(graphName);
+      categorySelect.addEventListener("change", event => { graphName = event.target.value; populateGraphWorks(graphName); setCollectionGraph(graphName); });
+      $("#graph-work-select").addEventListener("change", refreshSelectedGraph);
+      $("#graph-mode-select").addEventListener("change", event => { graphMode = event.target.value; refreshSelectedGraph(); });
+      $("#weight-filter").addEventListener("input", () => { if (selectedNode !== null) renderDetail(selectedNode); else drawGraph(); });
+      $("#show-labels").addEventListener("change", drawGraph);
+      $("#reset-view").addEventListener("click", resetTransform);
+      $("#verse-search").addEventListener("change", event => { const index = graph.nodes.findIndex(node => node.id.toLowerCase() === event.target.value.trim().toLowerCase()); if (index >= 0) renderDetail(index); });
+      $("#community-select").addEventListener("change", event => { const community = graph.comms.find(item => item.i === Number(event.target.value)); if (event.target.value === "") { selectedCommunity = null; selectedNode = null; renderDetail(null); renderCommunities(); } else if (community) { selectedCommunity = null; selectCommunity(community); } });
+      canvas.addEventListener("pointerdown", event => { pointer = { id: event.pointerId, x: event.clientX, y: event.clientY, moved: false }; canvas.setPointerCapture(event.pointerId); canvas.classList.add("dragging"); });
+      canvas.addEventListener("pointermove", event => { if (!pointer || pointer.id !== event.pointerId) return; const dx = event.clientX - pointer.x, dy = event.clientY - pointer.y; if (Math.abs(dx) + Math.abs(dy) > 2) pointer.moved = true; transform.x += dx; transform.y += dy; pointer.x = event.clientX; pointer.y = event.clientY; drawGraph(); });
+      canvas.addEventListener("pointerup", event => { if (!pointer || pointer.id !== event.pointerId) return; if (!pointer.moved) { const rect = canvas.getBoundingClientRect(); const index = nearestNode(event.clientX - rect.left, event.clientY - rect.top); if (index !== null) renderDetail(index); } pointer = null; canvas.classList.remove("dragging"); });
+      canvas.addEventListener("wheel", event => { event.preventDefault(); const rect = canvas.getBoundingClientRect(); const mouseX = event.clientX - rect.left, mouseY = event.clientY - rect.top; const old = transform.scale; const next = Math.max(.55, Math.min(4, old * Math.exp(-event.deltaY * .001))); transform.x = mouseX - (mouseX - transform.x - rect.width / 2) * next / old - rect.width / 2; transform.y = mouseY - (mouseY - transform.y - rect.height / 2) * next / old - rect.height / 2; transform.scale = next; drawGraph(); }, { passive: false });
+      new ResizeObserver(resizeCanvas).observe(canvas.parentElement);
+      setCollectionGraph(graphName);
+    }
+
+    renderSummary();
+    renderHeatmap();
+    renderDendrogram();
+    renderTraditionControls();
+    setupWorkExplorer();
+    setupGraph();
+  </script>
+</body>
+</html>

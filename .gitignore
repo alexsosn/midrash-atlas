@@ -1,0 +1,10 @@
+.DS_Store
+.env
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Local Sefaria API responses and historical working snapshots.
+cache/
+legacy/
