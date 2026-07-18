@@ -3,6 +3,7 @@ import os
 import unittest
 
 from dataset import BOOK_SECTIONS, VERSE_COUNTS, parse_verse
+from layout_collection_graphs import collection_edges
 from layout_work_graphs import book_lookup, layout_edges
 
 
@@ -19,7 +20,7 @@ class AtlasDataTests(unittest.TestCase):
         summary = self.data["summary"]
         self.assertEqual(
             self.data["meta"]["method_version"],
-            "7.0-full-work-graphs",
+            "8.0-full-collection-graphs",
         )
         self.assertEqual(summary["tanakh_books"], 39)
         self.assertEqual(summary["tanakh_chapters"], 929)
@@ -41,6 +42,8 @@ class AtlasDataTests(unittest.TestCase):
         self.assertNotIn(".slice(0, 120)", template)
         self.assertIn("completeWorkLayout", template)
         self.assertIn("Показати підграф джерела", template)
+        self.assertIn("function buildCollectionGraph", template)
+        self.assertNotIn("DATA.graphs[category]", template)
 
     def test_labels_follow_the_active_research_focus(self):
         template_path = os.path.join(HERE, "atlas_template.html")
@@ -96,6 +99,23 @@ class AtlasDataTests(unittest.TestCase):
         self.assertEqual(actual, expected)
         self.assertEqual(self.data["meta"]["work_layouts"]["format_version"], 2)
 
+    def test_every_collection_layout_covers_the_complete_graph(self):
+        books = book_lookup(self.data)
+        for category, works in self.data["work_graphs"].items():
+            for mode in ("loci", "raw"):
+                edges = collection_edges(works, books, mode)
+                expected = {node for edge in edges for node in edge}
+                layout = self.data["collection_layouts"][category][mode]
+                actual = {row[0] for row in layout["nodes"]}
+                self.assertEqual(actual, expected, (category, mode))
+                self.assertEqual(layout["edge_count"], len(edges), (category, mode))
+        self.assertNotIn("graphs", self.data)
+        self.assertTrue(all(
+            len(graph["nodes"]) <= 240
+            for modes in self.data["collection_previews"].values()
+            for graph in modes.values()
+        ))
+
     def test_profiles_reach_all_three_tanakh_sections(self):
         sections = set()
         for profile in self.data["profiles"].values():
@@ -108,7 +128,7 @@ class AtlasDataTests(unittest.TestCase):
     def test_graph_evidence_resolves_to_exact_source_refs(self):
         source_count = len(self.data["source_index"])
         self.assertGreater(source_count, 0)
-        for modes in self.data["graphs"].values():
+        for modes in self.data["collection_previews"].values():
             self.assertEqual(set(modes), {"loci", "raw"})
             for graph in modes.values():
                 self.assertTrue(graph["nodes"])
@@ -128,12 +148,12 @@ class AtlasDataTests(unittest.TestCase):
                     self.assertTrue(verse_ids)
 
     def test_requested_drilldowns_remain_available(self):
-        self.assertIn("Musar", self.data["graphs"])
+        self.assertIn("Musar", self.data["collection_layouts"])
         names = {work["name"] for work in self.data["work_graphs"]["Kabbalah"]}
         self.assertIn("Maaseh Rokeach on Mishnah", names)
 
     def test_locus_sources_have_total_weight_one(self):
-        for category, modes in self.data["graphs"].items():
+        for category, modes in self.data["collection_previews"].items():
             locus = modes["loci"]
             self.assertAlmostEqual(
                 locus["full"]["total_weight"],

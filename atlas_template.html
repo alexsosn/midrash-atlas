@@ -935,8 +935,11 @@
       });
       return positions;
     }
-    function bookForVerseId(id) { return DATA.book_ranges.find(([_book, start, end]) => id >= start && id <= end)?.[0]; }
-    function chapterForVerseId(id) { return Number(DATA.verse_index[id].slice(DATA.verse_index[id].lastIndexOf(" ") + 1).split(":")[0]); }
+    const verseBookById = new Array(DATA.verse_index.length);
+    DATA.book_ranges.forEach(([book, start, end]) => verseBookById.fill(book, start, end + 1));
+    const verseChapterById = DATA.verse_index.map(ref => Number(ref.slice(ref.lastIndexOf(" ") + 1).split(":")[0]));
+    function bookForVerseId(id) { return verseBookById[id]; }
+    function chapterForVerseId(id) { return verseChapterById[id]; }
     function distanceBandIds(a, b) {
       if (bookForVerseId(a) !== bookForVerseId(b)) return "cross-book";
       const distance = Math.abs(a - b);
@@ -958,11 +961,17 @@
     }
     function adaptiveWorkThreshold(edges, fullNodeCount) {
       const supports = [...new Set(edges.map(edge => edge.support))].sort((a, b) => a - b);
+      const buckets = new Map(supports.map(support => [support, []]));
+      edges.forEach(edge => buckets.get(edge.support).push(edge));
+      const stats = new Map(), active = new Set(); let edgeCount = 0;
+      [...supports].reverse().forEach(support => {
+        buckets.get(support).forEach(edge => { edgeCount += 1; active.add(edge.a); active.add(edge.b); });
+        stats.set(support, [edgeCount, active.size]);
+      });
       let chosen = supports[0] || 1;
       for (const threshold of supports) {
-        const kept = edges.filter(edge => edge.support >= threshold);
-        const nodes = new Set(kept.flatMap(edge => [edge.a, edge.b]));
-        if (kept.length <= 420 && nodes.size >= Math.min(20, fullNodeCount)) { chosen = threshold; break; }
+        const [keptEdges, keptNodes] = stats.get(threshold);
+        if (keptEdges <= 420 && keptNodes >= Math.min(20, fullNodeCount)) { chosen = threshold; break; }
       }
       return chosen;
     }
@@ -1036,6 +1045,60 @@
       const edges = [...edgeMap.values()].map(edge => ({ ...edge, sources: [...edge.sources], support: edge.sources.size, surprise: 0 }));
       return { edges, eligibleSources, locusCount: mode === "raw" ? null : locusCount };
     }
+    function buildCollectionGraph(category, requestedMode) {
+      const baseMode = requestedMode === "raw" ? "raw" : "loci";
+      const sourceVerses = new Map();
+      DATA.work_graphs[category].forEach(work => work.sources.forEach(([source, verseIds]) => {
+        if (!sourceVerses.has(source)) sourceVerses.set(source, new Set());
+        verseIds.forEach(id => sourceVerses.get(source).add(id));
+      }));
+      const combined = { sources: [...sourceVerses].map(([source, verseIds]) => [source, [...verseIds]]) };
+      const built = workEdges(combined, baseMode), fullEdges = built.edges;
+      const fullNodeIds = [...new Set(fullEdges.flatMap(edge => [edge.a, edge.b]))];
+      const layout = DATA.collection_layouts?.[category]?.[baseMode];
+      if (!layout) throw new Error("Missing complete collection layout for " + category + " / " + baseMode);
+      const stored = new Map(layout.nodes.map(([id, x, y, community]) => [id, { x, y, community }]));
+      const missing = fullNodeIds.filter(id => !stored.has(id));
+      if (missing.length) throw new Error("Incomplete collection layout for " + category + " / " + baseMode + ": " + missing.length + " vertices");
+      const weightedDegree = new Map(fullNodeIds.map(id => [id, 0]));
+      fullEdges.forEach(edge => { weightedDegree.set(edge.a, weightedDegree.get(edge.a) + edge.weight); weightedDegree.set(edge.b, weightedDegree.get(edge.b) + edge.weight); });
+      if (requestedMode === "unexpected") addWorkSurprise(fullEdges, fullNodeIds, weightedDegree);
+      const recommendedSupport = adaptiveWorkThreshold(fullEdges, fullNodeIds.length);
+      let minSurprise = .5;
+      if (requestedMode === "unexpected" && fullEdges.length && !fullEdges.some(edge => edge.surprise >= minSurprise)) {
+        minSurprise = Math.max(0, Math.min(...fullEdges.map(edge => edge.surprise)));
+      }
+      const order = [...fullNodeIds].sort((a, b) => weightedDegree.get(b) - weightedDegree.get(a)), indexFor = new Map(order.map((id, index) => [id, index]));
+      const near = order.map(() => []), topWeight = order.map(() => []), topSurprise = order.map(() => []);
+      function keepTop(rows, row, score) {
+        if (rows.length < 10) { rows.push(row); return; }
+        let weakest = 0;
+        for (let index = 1; index < rows.length; index++) if (score(rows[index][1]) < score(rows[weakest][1])) weakest = index;
+        if (score(row[1]) > score(rows[weakest][1])) rows[weakest] = row;
+      }
+      fullEdges.forEach(edge => {
+        const left = indexFor.get(edge.a), right = indexFor.get(edge.b);
+        near[left].push(right); near[right].push(left);
+        keepTop(topWeight[left], [right, edge], item => item.weight); keepTop(topWeight[right], [left, edge], item => item.weight);
+        if (requestedMode === "unexpected") { keepTop(topSurprise[left], [right, edge], item => item.surprise); keepTop(topSurprise[right], [left, edge], item => item.surprise); }
+      });
+      function collectionNeighborRows(index) {
+        const seen = new Set(), selected = [];
+        const ranked = [...topWeight[index]].sort((a, b) => b[1].weight - a[1].weight);
+        if (requestedMode === "unexpected") ranked.push(...[...topSurprise[index]].sort((a, b) => b[1].surprise - a[1].surprise));
+        ranked.forEach(pair => { if (!seen.has(pair[0])) { seen.add(pair[0]); selected.push(pair); } });
+        return selected.map(([neighbor, edge]) => [neighbor, edge.weight, edge.support, edge.sources, edge.surprise]);
+      }
+      const nodes = order.map((id, index) => ({ id: DATA.verse_index[id], x: stored.get(id).x, y: stored.get(id).y, d: weightedDegree.get(id), c: stored.get(id).community, near: near[index], nb: collectionNeighborRows(index) }));
+      const edges = fullEdges.map(edge => [indexFor.get(edge.a), indexFor.get(edge.b), edge.weight, edge.support, edge.surprise, edge.sources]).sort((a, b) => b[2] - a[2]);
+      const communities = new Map();
+      order.forEach(id => { const community = stored.get(id).community; if (!communities.has(community)) communities.set(community, []); communities.get(community).push(id); });
+      const internalDegree = new Map(fullNodeIds.map(id => [id, 0]));
+      fullEdges.forEach(edge => { if (stored.get(edge.a).community === stored.get(edge.b).community) { internalDegree.set(edge.a, internalDegree.get(edge.a) + edge.weight); internalDegree.set(edge.b, internalDegree.get(edge.b) + edge.weight); } });
+      const comms = [...communities].filter(([_community, ids]) => ids.length >= 10).map(([community, ids]) => ({ i: community, size: ids.length, top: [...ids].sort((a, b) => internalDegree.get(b) - internalDegree.get(a)).slice(0, 6).map(id => DATA.verse_index[id]) }));
+      const nodeCount = fullNodeIds.length, edgeCount = fullEdges.length;
+      return { title: category, category, method: "louvain", view_mode: requestedMode, nodes, edges, Q: layout.Q, comms, community_count: layout.community_count, substantial_community_count: comms.length, min_support: 1, recommended_support: recommendedSupport, min_surprise: minSurprise, full: { nodes: nodeCount, edges: edgeCount, total_weight: fullEdges.reduce((sum, edge) => sum + edge.weight, 0), support_sum: fullEdges.reduce((sum, edge) => sum + edge.support, 0), supporting_sources: built.eligibleSources, loci: built.locusCount, avg_degree: nodeCount ? 2 * edgeCount / nodeCount : 0, density: nodeCount > 1 ? 2 * edgeCount / (nodeCount * (nodeCount - 1)) : 0 } };
+    }
     function buildWorkGraph(category, workData, requestedMode) {
       const baseMode = requestedMode === "raw" ? "raw" : "loci", built = workEdges(workData, baseMode);
       const fullEdges = built.edges, fullNodeIds = [...new Set(fullEdges.flatMap(edge => [edge.a, edge.b]))];
@@ -1069,7 +1132,7 @@
     const ctx = canvas.getContext("2d");
     let graphName = "Talmud";
     let graphMode = "loci";
-    let graph = DATA.graphs[graphName][graphMode];
+    let graph = null;
     let graphCaptionBase = "";
     let selectedNode = null;
     let selectedCommunity = null;
@@ -1082,7 +1145,7 @@
       const dpr = window.devicePixelRatio || 1;
       canvas.width = Math.round(rect.width * dpr); canvas.height = Math.round(rect.height * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      drawGraph();
+      if (graph) drawGraph();
     }
     function basePoint(node) {
       const rect = canvas.getBoundingClientRect();
@@ -1123,12 +1186,11 @@
       if (selectedNode !== null) {
         return [selectedNode, ...focusedNeighborRows(selectedNode, threshold).map(item => item[0])];
       }
-      const byDegree = (a, b) => graph.nodes[b].d - graph.nodes[a].d;
-      if (selectedSource !== null) return [...sourceNodeSet].sort(byDegree);
+      if (selectedSource !== null) return [...sourceNodeSet].sort((a, b) => a - b);
       if (selectedCommunity !== null) {
-        return graph.nodes.map((_node, index) => index).filter(index => active.has(index) && graph.nodes[index].c === selectedCommunity).sort(byDegree);
+        return graph.nodes.map((_node, index) => index).filter(index => active.has(index) && graph.nodes[index].c === selectedCommunity);
       }
-      return graph.nodes.map((_node, index) => index).filter(index => active.has(index)).sort(byDegree);
+      return graph.nodes.map((_node, index) => index).filter(index => active.has(index));
     }
     function drawLabels(active, threshold, sourceNodeSet, ink, surface) {
       const rect = canvas.getBoundingClientRect();
@@ -1260,9 +1322,7 @@
           const summary = document.createElement("summary"); summary.textContent = "Показати всі джерельні посилання (" + sources.length + ")"; details.append(summary);
           sources.forEach(source => {
             const row = document.createElement("div"); row.append(refLink(sourceReference(source)));
-            if (graph.method === "components" && graph.edges.some(edge => edge[5]?.includes(source))) {
-              const isolate = document.createElement("button"); isolate.type = "button"; isolate.textContent = "Показати підграф джерела"; isolate.addEventListener("click", () => renderSource(source)); row.append(isolate);
-            }
+            const isolate = document.createElement("button"); isolate.type = "button"; isolate.textContent = "Показати підграф джерела"; isolate.addEventListener("click", () => renderSource(source)); row.append(isolate);
             details.append(row);
           });
           li.append(details);
@@ -1279,7 +1339,7 @@
       const nodeIndexes = [...new Set(sourceEdges.flatMap(edge => [edge[0], edge[1]]))];
       const detail = $("#graph-detail"); detail.replaceChildren();
       const title = document.createElement("h3"); title.className = "detail-ref"; title.append(refLink(sourceReference(source)));
-      const copy = document.createElement("p"); copy.className = "compare-copy"; copy.textContent = fmt.format(nodeIndexes.length) + " віршів · " + fmt.format(sourceEdges.length) + " міжлокусних пар у повному графі твору.";
+      const copy = document.createElement("p"); copy.className = "compare-copy"; copy.textContent = fmt.format(nodeIndexes.length) + " віршів · " + fmt.format(sourceEdges.length) + (graph.method === "components" ? " міжлокусних пар у повному графі твору." : " міжлокусних пар у повному графі колекції.");
       const sub = document.createElement("h3"); sub.textContent = "Усі вірші цього джерельного сегмента";
       const list = document.createElement("ul"); list.className = "neighbor-list";
       nodeIndexes.sort((a, b) => graph.nodes[a].id.localeCompare(graph.nodes[b].id)).forEach(index => { const item = document.createElement("li"); item.append(refLink(graph.nodes[index].id)); list.append(item); });
@@ -1349,10 +1409,17 @@
       $("#verse-search").value = "";
       renderDetail(null); renderGraphStats(); renderCommunities(); drawGraph();
     }
+    const collectionGraphCache = new Map();
     function setCollectionGraph(category) {
       graphName = category;
-      const base = graphMode === "raw" ? DATA.graphs[category].raw : DATA.graphs[category].loci;
-      applyGraph({ ...base, view_mode: graphMode }, translated(category));
+      const key = category + "|" + graphMode;
+      let complete = collectionGraphCache.get(key);
+      if (!complete) {
+        complete = buildCollectionGraph(category, graphMode);
+        collectionGraphCache.set(key, complete);
+        while (collectionGraphCache.size > 2) collectionGraphCache.delete(collectionGraphCache.keys().next().value);
+      }
+      applyGraph(complete, translated(category));
     }
     function setWorkGraph(category, workName) {
       const work = DATA.work_graphs[category].find(item => item.name === workName);

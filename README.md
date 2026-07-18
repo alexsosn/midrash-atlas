@@ -22,21 +22,26 @@ Refresh the chapter cache, then generate the atlas:
 python pull.py
 python export_atlas.py
 python layout_work_graphs.py
+python layout_collection_graphs.py
 ```
 
-The final command uses Graphviz `sfdp` to precompute deterministic layouts for
-complete work graphs larger than 120 nodes and rewrites the data/report with
-those layouts embedded. One stable layout covers both the locus and raw-pair
-models; locus edges determine its geometry and low-weight raw-only links place
-verses that occur solely in the raw model. Smaller graphs retain the in-browser
-force layout.
+The two layout commands use Graphviz `sfdp` to precompute deterministic
+coordinates and rewrite the data/report with those layouts embedded. One stable
+work layout covers both the locus and raw-pair models; locus edges determine its
+geometry and low-weight raw-only links place verses that occur solely in the raw
+model. Smaller work graphs retain the in-browser force layout.
+
+The collection-layout command performs the same precomputation for both edge
+models of every complete collection graph and stores Louvain membership with
+the coordinates. The browser reconstructs all collection edges from exact
+source evidence; the support slider never changes which vertices or edges are
+part of the analytical graph.
 
 This reads one cached Links API response for each of the 929 Tanakh chapters
 and writes:
 
-- `atlas_data.json`: reusable profiles, collection/work hierarchies, all eight
-  collection graphs, compact source evidence for individual-work graphs, and
-  provenance;
+- `atlas_data.json`: reusable profiles, collection/work hierarchies, compact
+  exact source evidence, complete collection/work layouts, and provenance;
 - `report.html`: standalone pair-comparison lab, collection and work
   dendrograms, citation profiles, and community-aware graph explorer.
 
@@ -109,16 +114,19 @@ provenance, and philological-review work still needed before publishable claims.
 - Work-level dendrograms include up to 18 works per category with at least 30
   normalized citation weight and 15 distinct cited Tanakh verses. Coverage and
   the filter threshold are displayed in the instrument.
-- Collection and work slices retain support-1 edges. The source-support control
+- Collection and work graphs retain support-1 edges. The source-support control
   always starts at 1; single-source edges are drawn quietly so they remain
   auditable without visually competing with repeated evidence.
 - Collection graphs use Louvain communities; an individual work uses connected
   components because sparse work-level evidence does not support a stable
-  modularity partition. Spring layouts use seed 17, and every displayed edge
-  retains its complete list of exact Sefaria source refs.
+  modularity partition. Layouts use seed 17, and every displayed edge retains
+  its complete list of exact Sefaria source refs.
 - Individual-work graphs contain every vertex and edge in the chosen model.
   The former top-120 centrality selection has been removed; labels and edge
   emphasis change with zoom and filters, but the analytical graph does not.
+- Collection graphs likewise contain every vertex and edge. The retained
+  `collection_previews` dataset is a compact build-time diagnostic only and is
+  never used by the interactive research graph.
 
 Source APIs: [Links](https://developers.sefaria.org/reference/get-links),
 [Shape](https://developers.sefaria.org/reference/get-shape), and

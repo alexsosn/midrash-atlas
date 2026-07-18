@@ -25,6 +25,7 @@ from dataset import BOOK_SECTIONS, CACHE, SELECTIVE, VERSE_COUNTS
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 WORK_LAYOUTS_PATH = os.path.join(HERE, "work_layouts.json")
+COLLECTION_LAYOUTS_PATH = os.path.join(HERE, "collection_layouts.json")
 
 UA = {
     "Talmud": "Талмуд",
@@ -180,7 +181,7 @@ def add_surprise_scores(graph, strengths):
         )
 
 
-def graph_slice(category, source_verses, intern_source, mode, top_n=240):
+def graph_preview(category, source_verses, intern_source, mode, top_n=240):
     edges, evidence, audit = edges_from_sources(source_verses, mode)
     graph = nx.Graph()
     for (a, b), weight in edges.items():
@@ -397,7 +398,7 @@ def build_data():
             "cache": cache,
             "source": "https://www.sefaria.org/api/links/{tref}?with_text=0",
             "shape_source": "https://www.sefaria.org/api/shape/{title}",
-            "method_version": "7.0-full-work-graphs",
+            "method_version": "8.0-full-collection-graphs",
             "notes": [
                 "Canonical Tanakh refs are validated against the full Sefaria Tanakh Shape API response.",
                 "A range link has total citation weight 1, divided over its canonical verses.",
@@ -407,8 +408,9 @@ def build_data():
                 "Default graphs merge targets separated by at most one uncited verse into source-specific loci.",
                 "Within-locus pairs are suppressed and each eligible source contributes total graph weight one.",
                 "Unexpected association is shrunken observed/expected lift conditioned on verse popularity and textual-distance band.",
-                "Exported collection slices retain edges supported by a single exact source ref; the interactive support filter starts at one.",
+                "Compact collection previews retain support-one edges but are never used as the interactive analytical graph.",
                 "Individual-work graphs retain every vertex and edge in the selected edge model; no centrality top-N selection is applied.",
+                "Interactive collection graphs are reconstructed from all exact source evidence and use precomputed full-graph layouts; the retained collection_previews field is explicitly non-analytical.",
             ],
         },
         "traditions": traditions,
@@ -452,9 +454,10 @@ def build_data():
         "book_sections": BOOK_SECTIONS,
         "book_ranges": [],
         "source_index": [],
-        "graphs": {},
+        "collection_previews": {},
         "work_graphs": {},
         "work_layouts": {},
+        "collection_layouts": {},
     }
     range_start = 0
     for book, chapters in VERSE_COUNTS.items():
@@ -487,8 +490,8 @@ def build_data():
                     "name": work,
                     "sources": compact_sources,
                 })
-        data["graphs"][category] = {
-            mode: graph_slice(
+        data["collection_previews"][category] = {
+            mode: graph_preview(
                 category, category_sources, intern_source, mode
             )
             for mode in ("loci", "raw")
@@ -506,7 +509,7 @@ def build_data():
         with open(WORK_LAYOUTS_PATH, encoding="utf-8") as handle:
             layout_bundle = json.load(handle)
         if (
-            layout_bundle.get("atlas_method_version") == data["meta"]["method_version"]
+            layout_bundle.get("format_version") == 2
             and layout_bundle.get("work_evidence_sha256") == work_digest
         ):
             data["work_layouts"] = layout_bundle["layouts"]
@@ -515,6 +518,21 @@ def build_data():
                 for key in (
                     "format_version", "generated_at", "work_evidence_sha256",
                     "threshold", "layout_count", "position_count",
+                )
+            }
+    if os.path.exists(COLLECTION_LAYOUTS_PATH):
+        with open(COLLECTION_LAYOUTS_PATH, encoding="utf-8") as handle:
+            collection_bundle = json.load(handle)
+        if (
+            collection_bundle.get("format_version") == 1
+            and collection_bundle.get("work_evidence_sha256") == work_digest
+        ):
+            data["collection_layouts"] = collection_bundle["layouts"]
+            data["meta"]["collection_layouts"] = {
+                key: collection_bundle[key]
+                for key in (
+                    "format_version", "generated_at", "work_evidence_sha256",
+                    "layout_count", "position_count",
                 )
             }
     return data
