@@ -87,6 +87,18 @@ are not restricted to the top-node slice used for readable browser display.
 See [RESEARCH_ROADMAP.md](RESEARCH_ROADMAP.md) for the prioritized validity,
 provenance, and philological-review work still needed before publishable claims.
 
+## Localization
+
+The atlas ships fully bilingual (Ukrainian / English) in one file. Ukrainian is
+authored inline in `atlas_template.html` and captured at startup; English lives
+in the template's `L10N_EN` (static text) and `MSG.en` (dynamic strings)
+dictionaries. A nav toggle switches the language at runtime, re-rendering every
+instrument while preserving the selected pair, collection, graph slice, zoom,
+and node/community/source selection. The choice persists in `localStorage`,
+`?lang=uk|en` overrides it, and the first visit follows `navigator.language`.
+Number and date formatting follow the active locale. `test_i18n.py` keeps the
+dictionaries complete and parallel.
+
 ## Methodological decisions
 
 - Canonical refs are validated against the full Tanakh response from Sefaria's
